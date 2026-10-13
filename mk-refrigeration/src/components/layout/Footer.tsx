@@ -123,7 +123,7 @@ export default function Footer() {
 
         <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-8 border-t border-gray-800">
           <p className="text-xs text-gray-500">
-            © {new Date().getFullYear()} MK Refrigeration, Bharuch. All rights reserved.
+            © 2025 MK Refrigeration, Bharuch. All rights reserved.
           </p>
           <div className="flex flex-wrap justify-center gap-6">
             {[

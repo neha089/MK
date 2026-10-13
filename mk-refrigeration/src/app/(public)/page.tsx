@@ -48,7 +48,7 @@ export default async function HomePage() {
       <HeroSection />
       <TrustBadges />
       <CategoriesSection categories={categories} />
-      <ProductsSection products={products} />
+      <ProductsSection products={products.map((p) => ({ ...p, imageUrl: p.images?.[0] ?? null }))} />
       <OffersSection />
       <WhyChooseUs />
       <BrandsSection />
