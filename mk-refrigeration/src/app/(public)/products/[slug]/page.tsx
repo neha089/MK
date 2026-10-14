@@ -42,7 +42,26 @@ export default async function ProductPage({ params }: Props) {
   const mrp = Number(product.mrp ?? 0)
   const discount = discountPercent(mrp, price)
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: product.description ?? `${product.name} available at MK Refrigeration, Bharuch.`,
+    brand: { '@type': 'Brand', name: product.brand?.name ?? 'Unknown' },
+    offers: {
+      '@type': 'Offer',
+      priceCurrency: 'INR',
+      price: Number(product.price),
+      availability: product.inStock
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock',
+      seller: { '@type': 'Organization', name: 'MK Refrigeration' },
+    },
+  }
+
   return (
+    <>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     <div className="py-16 px-margin-desktop max-w-container-max mx-auto">
       <nav className="text-xs text-on-surface-variant mb-6 flex items-center gap-1 flex-wrap">
         <Link href="/" className="hover:text-primary transition-colors">Home</Link>
@@ -144,5 +163,6 @@ export default async function ProductPage({ params }: Props) {
         </div>
       </div>
     </div>
+    </>
   )
 }

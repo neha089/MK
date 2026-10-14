@@ -73,6 +73,44 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" />
       </head>
       <body className="font-body antialiased bg-surface text-on-surface">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'LocalBusiness',
+              name: 'MK Refrigeration',
+              description: 'Authorized dealer of AC, Refrigerator, Washing Machine, Deep Freezer, Cooler & Home Appliances in Bharuch, Gujarat.',
+              url: 'https://mkrefrigeration.com',
+              telephone: '+919898088292',
+              email: 'mkrefrigeration@gmail.com',
+              address: {
+                '@type': 'PostalAddress',
+                addressLocality: 'Bharuch',
+                addressRegion: 'Gujarat',
+                postalCode: '392001',
+                addressCountry: 'IN',
+              },
+              geo: {
+                '@type': 'GeoCoordinates',
+                latitude: 21.7051,
+                longitude: 72.9959,
+              },
+              openingHoursSpecification: [
+                {
+                  '@type': 'OpeningHoursSpecification',
+                  dayOfWeek: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],
+                  opens: '10:00',
+                  closes: '20:00',
+                },
+              ],
+              sameAs: [],
+              priceRange: '₹₹',
+              currenciesAccepted: 'INR',
+              paymentAccepted: 'Cash, UPI, Card',
+            }),
+          }}
+        />
         {children}
       </body>
     </html>

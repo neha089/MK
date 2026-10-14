@@ -41,16 +41,17 @@ export default function Navbar() {
           </Link>
 
           {/* Search */}
-          <div className="hidden lg:flex items-center relative w-[380px]">
+          <form action="/search" method="GET" className="hidden lg:flex items-center relative w-[380px]">
             <input
+              name="q"
               className="w-full pl-5 pr-12 py-3 bg-surface-container border border-outline-variant/60 rounded-xl focus:outline-none focus:border-primary focus:ring-4 focus:ring-blue-100 transition-all text-sm font-medium placeholder:text-on-surface-variant/60"
               placeholder="Search AC, Fridge, Washing Machine..."
-              type="text"
+              type="search"
             />
-            <button className="absolute right-2.5 bg-primary text-on-primary p-2 rounded-xl hover:bg-primary-dark transition-colors shadow-sm">
+            <button type="submit" className="absolute right-2.5 bg-primary text-on-primary p-2 rounded-xl hover:bg-primary-dark transition-colors shadow-sm">
               <span className="material-symbols-outlined text-[18px]">search</span>
             </button>
-          </div>
+          </form>
         </div>
 
         {/* Right actions */}
