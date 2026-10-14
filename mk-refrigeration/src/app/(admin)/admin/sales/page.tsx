@@ -36,6 +36,7 @@ export default async function SalesPage() {
                 <th className="text-left px-4 py-3.5">Items</th>
                 <th className="text-right px-4 py-3.5">Total</th>
                 <th className="text-left px-4 py-3.5">Date</th>
+                <th className="px-4 py-3.5"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/20">
@@ -54,6 +55,16 @@ export default async function SalesPage() {
                   <td className="px-4 py-3.5 text-right font-extrabold text-on-surface">{formatPrice(Number(s.totalAmount))}</td>
                   <td className="px-4 py-3.5 text-on-surface-variant text-xs">
                     {new Date(s.createdAt).toLocaleDateString('en-IN')}
+                  </td>
+                  <td className="px-4 py-3.5">
+                    <Link
+                      href={`/admin/sales/${s.id}/invoice`}
+                      target="_blank"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 px-2.5 py-1.5 rounded-lg transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-base">print</span>
+                      Invoice
+                    </Link>
                   </td>
                 </tr>
               ))}

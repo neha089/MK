@@ -46,11 +46,12 @@ export default async function QuotationsPage() {
                 <th className="text-center px-4 py-3.5">Status</th>
                 <th className="text-center px-4 py-3.5">Valid Days</th>
                 <th className="px-4 py-3.5" />
+                <th className="px-4 py-3.5" />
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/20">
               {quotations.length === 0 ? (
-                <tr><td colSpan={7} className="text-center py-16 text-on-surface-variant">No quotations yet.</td></tr>
+                <tr><td colSpan={8} className="text-center py-16 text-on-surface-variant">No quotations yet.</td></tr>
               ) : quotations.map((q) => (
                 <tr key={q.id} className="hover:bg-surface-container/50 transition-colors">
                   <td className="px-5 py-3.5 font-mono font-bold text-primary text-xs">{q.quoteNo}</td>
@@ -81,6 +82,16 @@ export default async function QuotationsPage() {
                         </form>
                       </div>
                     )}
+                  </td>
+                  <td className="px-4 py-3.5">
+                    <Link
+                      href={`/admin/quotations/${q.id}/pdf`}
+                      target="_blank"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-secondary bg-secondary/10 hover:bg-secondary/20 px-2.5 py-1.5 rounded-lg transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-base">picture_as_pdf</span>
+                      PDF
+                    </Link>
                   </td>
                 </tr>
               ))}
