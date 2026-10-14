@@ -93,8 +93,8 @@ model Supplier {
 model Purchase {
   id           String         @id @default(cuid())
   invoiceNo    String?
-  supplier     Supplier       @relation(fields: [supplierId], references: [id])
-  supplierId   String
+  supplier     Supplier?      @relation(fields: [supplierId], references: [id])
+  supplierId   String?
   purchaseDate DateTime       @default(now())
   totalAmount  Decimal        @db.Decimal(10, 2)
   notes        String?
@@ -216,10 +216,10 @@ model Offer {
   id          String    @id @default(cuid())
   title       String
   description String?
-  discount    Int
+  discount    Int?
   type        String    @default("PERCENT")
-  validFrom   DateTime
-  validUntil  DateTime
+  validFrom   DateTime?
+  validUntil  DateTime?
   active      Boolean   @default(true)
   createdAt   DateTime  @default(now())
 }
@@ -228,8 +228,10 @@ model Enquiry {
   id        String   @id @default(cuid())
   name      String
   phone     String
+  email     String?
   message   String?
   product   String?
+  read      Boolean  @default(false)
   status    String   @default("NEW")
   createdAt DateTime @default(now())
 }

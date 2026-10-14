@@ -1,10 +1,12 @@
 import { getSession } from '@/lib/session'
-import { redirect } from 'next/navigation'
 import AdminSidebar from '@/components/admin/AdminSidebar'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
-  if (!session) redirect('/admin/login')
+
+  if (!session) {
+    return <>{children}</>
+  }
 
   return (
     <div className="flex min-h-screen bg-surface-container-low">
