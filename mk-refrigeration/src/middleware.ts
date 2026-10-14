@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server'
 import { decrypt } from '@/lib/session'
 
 const ADMIN_PATHS = ['/admin/dashboard', '/admin/products', '/admin/categories', '/admin/brands',
-  '/admin/inventory', '/admin/purchases', '/admin/sales', '/admin/quotations',
+  '/admin/inventory', '/admin/suppliers', '/admin/purchases', '/admin/sales', '/admin/quotations',
   '/admin/customers', '/admin/enquiries', '/admin/staff', '/admin/offers']
 
 export async function middleware(request: NextRequest) {

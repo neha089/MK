@@ -11,6 +11,7 @@ const NAV = [
   { label: 'Categories', href: '/admin/categories', icon: 'category' },
   { label: 'Brands', href: '/admin/brands', icon: 'verified' },
   { label: 'Inventory', href: '/admin/inventory', icon: 'warehouse' },
+  { label: 'Suppliers', href: '/admin/suppliers', icon: 'local_shipping' },
   { label: 'Purchases', href: '/admin/purchases', icon: 'shopping_cart' },
   { label: 'Sales & Billing', href: '/admin/sales', icon: 'receipt_long' },
   { label: 'Quotations', href: '/admin/quotations', icon: 'request_quote' },
