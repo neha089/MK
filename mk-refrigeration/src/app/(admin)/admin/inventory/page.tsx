@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import { prisma } from '@/lib/db'
+import { adjustStock } from '@/actions/inventory'
+import InventoryClient from './_client'
 
 export const metadata: Metadata = { title: 'Inventory' }
 export const dynamic = 'force-dynamic'
@@ -34,47 +36,11 @@ export default async function InventoryPage() {
       )}
 
       <div className="bg-white rounded-2xl border border-outline-variant/40 overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-outline-variant/40 bg-surface-container">
+        <div className="px-5 py-3.5 border-b border-outline-variant/40 bg-surface-container flex items-center justify-between">
           <h2 className="font-bold text-sm text-on-surface">Stock Levels</h2>
+          <p className="text-xs text-on-surface-variant">Hover a row to adjust stock</p>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-surface-container/50 border-b border-outline-variant/40 text-xs text-on-surface-variant uppercase tracking-wider">
-              <tr>
-                <th className="text-left px-5 py-3">Product</th>
-                <th className="text-left px-4 py-3">Brand</th>
-                <th className="text-left px-4 py-3">Category</th>
-                <th className="text-center px-4 py-3">Qty</th>
-                <th className="text-center px-4 py-3">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-outline-variant/20">
-              {products.map((p) => (
-                <tr key={p.id} className="hover:bg-surface-container/50 transition-colors">
-                  <td className="px-5 py-3">
-                    <p className="font-bold text-on-surface">{p.name}</p>
-                    {p.model && <p className="text-xs text-on-surface-variant">{p.model}</p>}
-                  </td>
-                  <td className="px-4 py-3 text-on-surface-variant text-xs">{p.brand?.name ?? '—'}</td>
-                  <td className="px-4 py-3 text-on-surface-variant text-xs">{p.category?.name ?? '—'}</td>
-                  <td className="px-4 py-3 text-center">
-                    <span className={`font-extrabold text-base ${p.stockQty <= 2 ? 'text-error' : p.stockQty <= 5 ? 'text-warning' : 'text-on-surface'}`}>
-                      {p.stockQty}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    {p.inStock
-                      ? <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-success/10 text-success border border-success/20">In Stock</span>
-                      : <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-error/10 text-error border border-error/20">Out of Stock</span>}
-                  </td>
-                </tr>
-              ))}
-              {products.length === 0 && (
-                <tr><td colSpan={5} className="text-center py-12 text-on-surface-variant">No products found.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <InventoryClient products={products} action={adjustStock} />
       </div>
 
       <div className="bg-white rounded-2xl border border-outline-variant/40 overflow-hidden">
