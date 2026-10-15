@@ -76,6 +76,9 @@ export default async function ProductsPage() {
                   </td>
                   <td className="px-4 py-3.5">
                     <div className="flex items-center justify-end gap-1">
+                      <Link href={`/admin/products/${p.id}/label`} className="p-1.5 hover:bg-surface-container rounded-lg text-on-surface-variant hover:text-primary transition-colors" title="Print labels">
+                        <span className="material-symbols-outlined text-lg">label</span>
+                      </Link>
                       <Link href={`/admin/products/${p.id}/edit`} className="p-1.5 hover:bg-surface-container rounded-lg text-on-surface-variant hover:text-primary transition-colors">
                         <span className="material-symbols-outlined text-lg">edit</span>
                       </Link>
