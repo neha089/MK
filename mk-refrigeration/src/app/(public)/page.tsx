@@ -37,10 +37,30 @@ async function getCategories() {
   }
 }
 
+async function getActiveOffers() {
+  try {
+    const now = new Date()
+    return await prisma.offer.findMany({
+      where: {
+        active: true,
+        OR: [
+          { validUntil: null },
+          { validUntil: { gte: now } },
+        ],
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 6,
+    })
+  } catch {
+    return []
+  }
+}
+
 export default async function HomePage() {
-  const [products, categories] = await Promise.all([
+  const [products, categories, offers] = await Promise.all([
     getFeaturedProducts(),
     getCategories(),
+    getActiveOffers(),
   ])
 
   return (
@@ -49,7 +69,7 @@ export default async function HomePage() {
       <TrustBadges />
       <CategoriesSection categories={categories} />
       <ProductsSection products={products.map((p) => ({ ...p, imageUrl: p.images?.[0] ?? null }))} />
-      <OffersSection />
+      <OffersSection offers={offers} />
       <WhyChooseUs />
       <BrandsSection />
     </>

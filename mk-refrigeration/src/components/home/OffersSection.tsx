@@ -1,20 +1,29 @@
 import Link from 'next/link'
 import { SHOP } from '@/lib/constants'
 
-const OFFERS = [
-  {
-    tag: 'Limited Time',
-    title: 'Summer AC Mega Sale',
-    desc: 'Up to 40% off on all split and window ACs. Inverter models, 5-star BEE rating, free installation.',
-    cta: 'Shop ACs',
-    href: '/categories/ac',
-    icon: 'ac_unit',
-    gradient: 'from-blue-600 to-indigo-700',
-  },
+type DbOffer = {
+  id: string
+  title: string
+  description: string | null
+  discount: number | null
+  type: string
+  validUntil: Date | null
+}
+
+const GRADIENTS = [
+  'from-blue-600 to-indigo-700',
+  'from-emerald-600 to-teal-700',
+  'from-violet-600 to-purple-700',
+  'from-orange-500 to-red-600',
+  'from-pink-600 to-rose-700',
+  'from-cyan-600 to-sky-700',
+]
+
+const STATIC_OFFERS = [
   {
     tag: 'Exchange Offer',
     title: 'Old for New Scheme',
-    desc: 'Bring your old appliance and get up to ₹5,000 exchange bonus on Refrigerators & Washing Machines.',
+    desc: 'Bring your old appliance and get exchange bonus on Refrigerators & Washing Machines.',
     cta: 'Know More',
     href: `https://wa.me/${SHOP.whatsapp}?text=I want to know about the exchange offer`,
     icon: 'swap_horiz',
@@ -31,7 +40,27 @@ const OFFERS = [
   },
 ]
 
-export default function OffersSection() {
+function daysLeft(validUntil: Date) {
+  const diff = validUntil.getTime() - Date.now()
+  const days = Math.ceil(diff / (1000 * 60 * 60 * 24))
+  if (days <= 0) return null
+  if (days === 1) return 'Ends today'
+  if (days <= 7) return `${days} days left`
+  return null
+}
+
+function OfferTag({ text }: { text: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 bg-white/20 px-3 py-1 rounded-full text-xs font-bold tracking-wider self-start">
+      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+      {text}
+    </span>
+  )
+}
+
+export default function OffersSection({ offers = [] }: { offers?: DbOffer[] }) {
+  const hasDbOffers = offers.length > 0
+
   return (
     <section id="offers" className="py-20 bg-surface-container-low">
       <div className="px-margin-desktop max-w-container-max mx-auto">
@@ -45,37 +74,85 @@ export default function OffersSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {OFFERS.map((offer) => (
-            <div
-              key={offer.title}
-              className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${offer.gradient} p-7 flex flex-col gap-4 text-white`}
-            >
+        {/* DB offers (dynamic) */}
+        {hasDbOffers && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+            {offers.map((offer, i) => {
+              const gradient = GRADIENTS[i % GRADIENTS.length]
+              const expiry = offer.validUntil ? daysLeft(offer.validUntil) : null
+              const discountLabel = offer.discount
+                ? offer.type === 'FLAT'
+                  ? `Flat ₹${offer.discount} off`
+                  : `${offer.discount}% off`
+                : null
+              return (
+                <div
+                  key={offer.id}
+                  className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${gradient} p-7 flex flex-col gap-4 text-white`}
+                >
+                  <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-white/5 translate-x-16 -translate-y-16" />
+                  <OfferTag text={expiry ?? discountLabel ?? 'Special Offer'} />
+                  <span
+                    className="material-symbols-outlined text-5xl opacity-90 self-start"
+                    style={{ fontVariationSettings: "'FILL' 1" }}
+                  >
+                    local_offer
+                  </span>
+                  <div>
+                    <h3 className="font-headline text-xl font-extrabold leading-tight mb-2">{offer.title}</h3>
+                    {offer.description && (
+                      <p className="text-white/80 text-sm leading-relaxed">{offer.description}</p>
+                    )}
+                    {discountLabel && !offer.description && (
+                      <p className="text-white/80 text-sm">{discountLabel}</p>
+                    )}
+                  </div>
+                  <a
+                    href={`https://wa.me/${SHOP.whatsapp}?text=I am interested in the offer: ${encodeURIComponent(offer.title)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-auto inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 border border-white/30 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors self-start"
+                  >
+                    Enquire Now
+                    <span className="material-symbols-outlined text-base">arrow_forward</span>
+                  </a>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Static fallback offers (always show if no DB offers, or show alongside) */}
+        {!hasDbOffers && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 p-7 flex flex-col gap-4 text-white">
               <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-white/5 translate-x-16 -translate-y-16" />
-              <span className="inline-flex items-center gap-1.5 bg-white/20 px-3 py-1 rounded-full text-xs font-bold tracking-wider self-start">
-                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                {offer.tag}
-              </span>
-              <span
-                className="material-symbols-outlined text-5xl opacity-90 self-start"
-                style={{ fontVariationSettings: "'FILL' 1" }}
-              >
-                {offer.icon}
-              </span>
+              <OfferTag text="Limited Time" />
+              <span className="material-symbols-outlined text-5xl opacity-90 self-start" style={{ fontVariationSettings: "'FILL' 1" }}>ac_unit</span>
               <div>
-                <h3 className="font-headline text-xl font-extrabold leading-tight mb-2">{offer.title}</h3>
-                <p className="text-white/80 text-sm leading-relaxed">{offer.desc}</p>
+                <h3 className="font-headline text-xl font-extrabold leading-tight mb-2">Summer AC Mega Sale</h3>
+                <p className="text-white/80 text-sm leading-relaxed">Up to 40% off on all split and window ACs. Inverter models, 5-star BEE rating, free installation.</p>
               </div>
-              <Link
-                href={offer.href}
-                className="mt-auto inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 border border-white/30 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors self-start"
-              >
-                {offer.cta}
-                <span className="material-symbols-outlined text-base">arrow_forward</span>
+              <Link href="/categories/ac" className="mt-auto inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 border border-white/30 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors self-start">
+                Shop ACs <span className="material-symbols-outlined text-base">arrow_forward</span>
               </Link>
             </div>
-          ))}
-        </div>
+            {STATIC_OFFERS.map((offer) => (
+              <div key={offer.title} className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${offer.gradient} p-7 flex flex-col gap-4 text-white`}>
+                <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-white/5 translate-x-16 -translate-y-16" />
+                <OfferTag text={offer.tag} />
+                <span className="material-symbols-outlined text-5xl opacity-90 self-start" style={{ fontVariationSettings: "'FILL' 1" }}>{offer.icon}</span>
+                <div>
+                  <h3 className="font-headline text-xl font-extrabold leading-tight mb-2">{offer.title}</h3>
+                  <p className="text-white/80 text-sm leading-relaxed">{offer.desc}</p>
+                </div>
+                <Link href={offer.href} className="mt-auto inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 border border-white/30 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors self-start">
+                  {offer.cta} <span className="material-symbols-outlined text-base">arrow_forward</span>
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* CTA banner */}
         <div className="mt-8 bg-primary rounded-2xl px-8 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
