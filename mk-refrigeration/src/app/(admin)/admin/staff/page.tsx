@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { prisma } from '@/lib/db'
 import { deleteStaff } from '@/actions/staff'
 import AddStaffForm from './_add'
@@ -41,15 +42,20 @@ export default async function StaffPage() {
                 </td>
                 <td className="px-4 py-3.5 text-on-surface-variant text-xs">{new Date(u.createdAt).toLocaleDateString('en-IN')}</td>
                 <td className="px-4 py-3.5">
-                  <form action={deleteStaff.bind(null, u.id)}>
-                    <button
-                      type="submit"
-                      onClick={(e) => { if (!confirm(`Remove ${u.name}?`)) e.preventDefault() }}
-                      className="p-1.5 hover:bg-error/10 rounded-lg text-on-surface-variant hover:text-error transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-lg">delete</span>
-                    </button>
-                  </form>
+                  <div className="flex items-center justify-end gap-1">
+                    <Link href={`/admin/staff/${u.id}/edit`} className="p-1.5 hover:bg-surface-container rounded-lg text-on-surface-variant hover:text-primary transition-colors">
+                      <span className="material-symbols-outlined text-lg">edit</span>
+                    </Link>
+                    <form action={deleteStaff.bind(null, u.id)}>
+                      <button
+                        type="submit"
+                        onClick={(e) => { if (!confirm(`Remove ${u.name}?`)) e.preventDefault() }}
+                        className="p-1.5 hover:bg-error/10 rounded-lg text-on-surface-variant hover:text-error transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-lg">delete</span>
+                      </button>
+                    </form>
+                  </div>
                 </td>
               </tr>
             ))}

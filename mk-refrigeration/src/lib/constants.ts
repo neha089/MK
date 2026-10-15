@@ -32,8 +32,8 @@ export const BRANDS = [
 export const NAV_LINKS = [
   { label: 'Categories', href: '/categories' },
   { label: 'Top Sellers', href: '/#products' },
-  { label: 'Offers & Sale', href: '/#offers' },
-  { label: 'Our Brands', href: '/#brands' },
+  { label: 'Offers & Sale', href: '/offers' },
+  { label: 'Our Brands', href: '/brands' },
   { label: 'About Us', href: '/about' },
   { label: 'Contact', href: '/contact' },
 ]
