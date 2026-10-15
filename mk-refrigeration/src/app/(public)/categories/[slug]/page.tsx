@@ -5,7 +5,7 @@ import { prisma } from '@/lib/db'
 import { CATEGORIES } from '@/lib/constants'
 import { formatPrice, discountPercent } from '@/lib/utils'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 3600
 
 type Props = { params: Promise<{ slug: string }> }
 
