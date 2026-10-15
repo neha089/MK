@@ -82,8 +82,31 @@ const QUICK_LINKS = [
   { label: 'Manage Offers', href: '/admin/offers', icon: 'local_offer' },
 ]
 
+async function getTopSellers() {
+  try {
+    const grouped = await prisma.saleItem.groupBy({
+      by: ['productId'],
+      _sum: { qty: true },
+      orderBy: { _sum: { qty: 'desc' } },
+      take: 5,
+    })
+    if (!grouped.length) return []
+    const ids = grouped.map((g) => g.productId)
+    const products = await prisma.product.findMany({
+      where: { id: { in: ids } },
+      select: { id: true, name: true, model: true, brand: { select: { name: true } } },
+    })
+    const map = new Map(products.map((p) => [p.id, p]))
+    return grouped
+      .filter((g) => map.has(g.productId))
+      .map((g) => ({ product: map.get(g.productId)!, unitsSold: g._sum.qty ?? 0 }))
+  } catch {
+    return []
+  }
+}
+
 export default async function DashboardPage() {
-  const [stats, chartData] = await Promise.all([getStats(), getMonthlySales()])
+  const [stats, chartData, topSellers] = await Promise.all([getStats(), getMonthlySales(), getTopSellers()])
 
   return (
     <div className="space-y-8">
@@ -130,6 +153,48 @@ export default async function DashboardPage() {
         </div>
         <SalesChart data={chartData} />
       </div>
+
+      {/* Top Sellers */}
+      {topSellers.length > 0 && (
+        <div className="bg-white rounded-2xl border border-outline-variant/40 p-6">
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h2 className="font-headline font-bold text-on-surface">Top Sellers</h2>
+              <p className="text-xs text-on-surface-variant mt-0.5">Best-selling products by units sold</p>
+            </div>
+            <Link href="/admin/products" className="text-xs font-bold text-primary hover:underline">
+              All products →
+            </Link>
+          </div>
+          <div className="space-y-3">
+            {topSellers.map((item, i) => {
+              const maxUnits = topSellers[0]?.unitsSold ?? 1
+              const pct = Math.round((item.unitsSold / maxUnits) * 100)
+              return (
+                <div key={item.product.id} className="flex items-center gap-3">
+                  <span className="w-6 text-xs font-extrabold text-on-surface-variant text-right flex-shrink-0">
+                    #{i + 1}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-sm font-bold text-on-surface truncate">{item.product.name}</p>
+                      <span className="text-xs font-extrabold text-primary ml-2 flex-shrink-0">
+                        {item.unitsSold} sold
+                      </span>
+                    </div>
+                    <div className="h-1.5 bg-surface-container rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-primary rounded-full transition-all"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Quick actions */}
       <div>
