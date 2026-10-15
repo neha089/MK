@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { prisma } from '@/lib/db'
 import { formatPrice } from '@/lib/utils'
 
@@ -8,7 +9,10 @@ export const dynamic = 'force-dynamic'
 export default async function CustomersPage() {
   const customers = await prisma.customer.findMany({
     orderBy: { createdAt: 'desc' },
-    include: { _count: { select: { sales: true, quotations: true } } },
+    include: {
+      _count: { select: { sales: true, quotations: true } },
+      sales: { select: { totalAmount: true } },
+    },
   }).catch(() => [])
 
   return (
@@ -27,27 +31,47 @@ export default async function CustomersPage() {
                 <th className="text-left px-4 py-3.5">Phone</th>
                 <th className="text-left px-4 py-3.5">Address</th>
                 <th className="text-center px-4 py-3.5">Sales</th>
-                <th className="text-center px-4 py-3.5">Quotations</th>
+                <th className="text-right px-4 py-3.5">Total Spent</th>
                 <th className="text-left px-4 py-3.5">Since</th>
+                <th className="px-4 py-3.5"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/20">
               {customers.length === 0 ? (
-                <tr><td colSpan={6} className="text-center py-16 text-on-surface-variant">No customers yet. They are created automatically when you make a sale.</td></tr>
-              ) : customers.map((c) => (
-                <tr key={c.id} className="hover:bg-surface-container/50 transition-colors">
-                  <td className="px-5 py-3.5 font-bold text-on-surface">{c.name}</td>
-                  <td className="px-4 py-3.5">
-                    {c.phone ? (
-                      <a href={`tel:${c.phone}`} className="text-primary font-medium hover:underline">{c.phone}</a>
-                    ) : <span className="text-on-surface-variant">—</span>}
+                <tr>
+                  <td colSpan={7} className="text-center py-16 text-on-surface-variant">
+                    No customers yet. They are created automatically when you record a sale.
                   </td>
-                  <td className="px-4 py-3.5 text-on-surface-variant text-xs">{c.address ?? '—'}</td>
-                  <td className="px-4 py-3.5 text-center font-bold text-on-surface">{c._count.sales}</td>
-                  <td className="px-4 py-3.5 text-center font-bold text-on-surface">{c._count.quotations}</td>
-                  <td className="px-4 py-3.5 text-on-surface-variant text-xs">{new Date(c.createdAt).toLocaleDateString('en-IN')}</td>
                 </tr>
-              ))}
+              ) : customers.map((c) => {
+                const totalSpent = c.sales.reduce((sum, s) => sum + Number(s.totalAmount), 0)
+                return (
+                  <tr key={c.id} className="hover:bg-surface-container/50 transition-colors group">
+                    <td className="px-5 py-3.5">
+                      <Link href={`/admin/customers/${c.id}`} className="font-bold text-on-surface group-hover:text-primary transition-colors">
+                        {c.name}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3.5">
+                      {c.phone
+                        ? <a href={`tel:${c.phone}`} className="text-primary font-medium hover:underline">{c.phone}</a>
+                        : <span className="text-on-surface-variant">—</span>}
+                    </td>
+                    <td className="px-4 py-3.5 text-on-surface-variant text-xs max-w-[160px] truncate">{c.address ?? '—'}</td>
+                    <td className="px-4 py-3.5 text-center font-bold text-on-surface">{c._count.sales}</td>
+                    <td className="px-4 py-3.5 text-right font-bold text-on-surface">{formatPrice(totalSpent)}</td>
+                    <td className="px-4 py-3.5 text-on-surface-variant text-xs">{new Date(c.createdAt).toLocaleDateString('en-IN')}</td>
+                    <td className="px-4 py-3.5 text-right">
+                      <Link
+                        href={`/admin/customers/${c.id}`}
+                        className="text-xs text-primary font-medium hover:underline opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        View →
+                      </Link>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
