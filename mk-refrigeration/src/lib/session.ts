@@ -1,9 +1,10 @@
 import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 
-const key = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET || 'mk-refrigeration-secret-key'
-)
+if (!process.env.NEXTAUTH_SECRET) {
+  throw new Error('NEXTAUTH_SECRET environment variable is not set')
+}
+const key = new TextEncoder().encode(process.env.NEXTAUTH_SECRET)
 
 export type SessionPayload = {
   userId: string

@@ -30,6 +30,22 @@ export async function createBrand(_: BrandFormState, formData: FormData): Promis
   redirect('/admin/brands')
 }
 
+export async function updateBrand(id: string, _: BrandFormState, formData: FormData): Promise<BrandFormState> {
+  const raw = Object.fromEntries(formData)
+  const parsed = Schema.safeParse({ ...raw, featured: raw.featured === 'on' })
+  if (!parsed.success) return { error: parsed.error.issues[0].message }
+
+  const { name, logo, ...rest } = parsed.data
+  try {
+    await prisma.brand.update({ where: { id }, data: { name, slug: slugify(name), logo: logo || null, ...rest } })
+  } catch {
+    return { error: 'Failed to update. Name may already be taken.' }
+  }
+
+  revalidatePath('/admin/brands')
+  redirect('/admin/brands')
+}
+
 export async function deleteBrand(id: string) {
   await prisma.brand.delete({ where: { id } })
   revalidatePath('/admin/brands')

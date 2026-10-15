@@ -4,6 +4,8 @@ import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { SHOP } from '@/lib/constants'
+import { logAudit, getClientIp } from '@/lib/audit'
+import { checkEnquiryRateLimit } from '@/lib/ratelimit'
 
 async function notifyOwner(name: string, phone: string, product: string | undefined, message: string | undefined) {
   const topic = process.env.NTFY_TOPIC
@@ -44,6 +46,10 @@ export async function submitEnquiry(_: EnquiryFormState, formData: FormData): Pr
   })
   if (!parsed.success) return { error: parsed.error.issues[0].message }
 
+  const ip = await getClientIp()
+  const { blocked } = await checkEnquiryRateLimit(ip)
+  if (blocked) return { error: 'Too many enquiries from your location. Please try again later.' }
+
   try {
     await prisma.enquiry.create({
       data: {
@@ -55,6 +61,7 @@ export async function submitEnquiry(_: EnquiryFormState, formData: FormData): Pr
       },
     })
     void notifyOwner(parsed.data.name, parsed.data.phone, parsed.data.product, parsed.data.message)
+    void logAudit({ action: 'ENQUIRY_SUBMIT', ip, meta: parsed.data.name })
     revalidatePath('/admin/enquiries')
     return { success: true }
   } catch (e: unknown) {

@@ -46,13 +46,18 @@ export default async function CategoriesPage() {
                 <td className="px-4 py-3.5 text-center font-bold text-on-surface">{c._count.products}</td>
                 <td className="px-4 py-3.5 text-right text-on-surface-variant">{c.order}</td>
                 <td className="px-4 py-3.5">
-                  <form action={deleteCategory.bind(null, c.id)} className="flex justify-end">
-                    <button type="submit"
-                      onClick={(e) => { if (!confirm('Delete category?')) e.preventDefault() }}
-                      className="p-1.5 hover:bg-error/10 rounded-lg text-on-surface-variant hover:text-error transition-colors">
-                      <span className="material-symbols-outlined text-lg">delete</span>
-                    </button>
-                  </form>
+                  <div className="flex items-center justify-end gap-1">
+                    <Link href={`/admin/categories/${c.id}/edit`} className="p-1.5 hover:bg-surface-container rounded-lg text-on-surface-variant hover:text-primary transition-colors">
+                      <span className="material-symbols-outlined text-lg">edit</span>
+                    </Link>
+                    <form action={deleteCategory.bind(null, c.id)}>
+                      <button type="submit"
+                        onClick={(e) => { if (!confirm('Delete category?')) e.preventDefault() }}
+                        className="p-1.5 hover:bg-error/10 rounded-lg text-on-surface-variant hover:text-error transition-colors">
+                        <span className="material-symbols-outlined text-lg">delete</span>
+                      </button>
+                    </form>
+                  </div>
                 </td>
               </tr>
             ))}

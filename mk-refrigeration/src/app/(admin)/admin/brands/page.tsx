@@ -30,13 +30,18 @@ export default async function BrandsPage() {
               <p className="text-xs text-on-surface-variant mt-0.5">{b._count.products} products</p>
               {b.featured && <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full mt-1 inline-block">Featured</span>}
             </div>
-            <form action={deleteBrand.bind(null, b.id)}>
-              <button type="submit"
-                onClick={(e) => { if (!confirm('Delete brand?')) e.preventDefault() }}
-                className="p-1.5 hover:bg-error/10 rounded-lg text-on-surface-variant hover:text-error transition-colors">
-                <span className="material-symbols-outlined text-lg">delete</span>
-              </button>
-            </form>
+            <div className="flex items-center gap-1">
+              <Link href={`/admin/brands/${b.id}/edit`} className="p-1.5 hover:bg-surface-container rounded-lg text-on-surface-variant hover:text-primary transition-colors">
+                <span className="material-symbols-outlined text-lg">edit</span>
+              </Link>
+              <form action={deleteBrand.bind(null, b.id)}>
+                <button type="submit"
+                  onClick={(e) => { if (!confirm('Delete brand?')) e.preventDefault() }}
+                  className="p-1.5 hover:bg-error/10 rounded-lg text-on-surface-variant hover:text-error transition-colors">
+                  <span className="material-symbols-outlined text-lg">delete</span>
+                </button>
+              </form>
+            </div>
           </div>
         ))}
         {brands.length === 0 && (

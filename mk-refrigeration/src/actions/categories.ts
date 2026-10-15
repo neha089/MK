@@ -30,6 +30,21 @@ export async function createCategory(_: CatFormState, formData: FormData): Promi
   redirect('/admin/categories')
 }
 
+export async function updateCategory(id: string, _: CatFormState, formData: FormData): Promise<CatFormState> {
+  const parsed = Schema.safeParse(Object.fromEntries(formData))
+  if (!parsed.success) return { error: parsed.error.issues[0].message }
+
+  const { name, ...rest } = parsed.data
+  try {
+    await prisma.category.update({ where: { id }, data: { name, slug: slugify(name), ...rest } })
+  } catch {
+    return { error: 'Failed to update. Name may already be taken.' }
+  }
+
+  revalidatePath('/admin/categories')
+  redirect('/admin/categories')
+}
+
 export async function deleteCategory(id: string) {
   await prisma.category.delete({ where: { id } })
   revalidatePath('/admin/categories')

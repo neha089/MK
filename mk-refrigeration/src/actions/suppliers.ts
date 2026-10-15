@@ -42,6 +42,34 @@ export async function createSupplier(_: SupplierFormState, formData: FormData): 
   }
 }
 
+export async function updateSupplier(id: string, _: SupplierFormState, formData: FormData): Promise<SupplierFormState> {
+  const parsed = SupplierSchema.safeParse({
+    name: formData.get('name'),
+    phone: formData.get('phone') || undefined,
+    email: formData.get('email') || undefined,
+    address: formData.get('address') || undefined,
+    gstin: formData.get('gstin') || undefined,
+  })
+  if (!parsed.success) return { error: parsed.error.issues[0].message }
+
+  try {
+    await prisma.supplier.update({
+      where: { id },
+      data: {
+        name: parsed.data.name,
+        phone: parsed.data.phone ?? null,
+        email: parsed.data.email || null,
+        address: parsed.data.address ?? null,
+        gstin: parsed.data.gstin ?? null,
+      },
+    })
+    revalidatePath('/admin/suppliers')
+    return { success: true }
+  } catch (e: unknown) {
+    return { error: e instanceof Error ? e.message : 'Failed to update supplier' }
+  }
+}
+
 export async function deleteSupplier(id: string) {
   await prisma.supplier.delete({ where: { id } })
   revalidatePath('/admin/suppliers')

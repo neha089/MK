@@ -5,6 +5,8 @@ import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { createSession, deleteSession } from '@/lib/session'
+import { logAudit, getClientIp } from '@/lib/audit'
+import { checkLoginRateLimit } from '@/lib/ratelimit'
 
 const LoginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
@@ -26,12 +28,26 @@ export async function login(state: LoginState, formData: FormData): Promise<Logi
   }
 
   const { email, password } = validated.data
+  const ip = await getClientIp()
+
+  const { blocked, attemptsLeft } = await checkLoginRateLimit(email)
+  if (blocked) {
+    return { message: `Too many failed attempts. Try again in 15 minutes.` }
+  }
 
   const user = await prisma.user.findUnique({ where: { email } })
-  if (!user) return { message: 'Invalid email or password.' }
+  if (!user) {
+    void logAudit({ action: 'LOGIN_FAIL', userEmail: email, ip, meta: 'user_not_found' })
+    return { message: `Invalid email or password.${attemptsLeft <= 2 ? ` ${attemptsLeft} attempts left.` : ''}` }
+  }
 
   const passwordMatch = await bcrypt.compare(password, user.password)
-  if (!passwordMatch) return { message: 'Invalid email or password.' }
+  if (!passwordMatch) {
+    void logAudit({ action: 'LOGIN_FAIL', userEmail: email, userId: user.id, ip, meta: 'wrong_password' })
+    return { message: `Invalid email or password.${attemptsLeft <= 2 ? ` ${attemptsLeft} attempts left.` : ''}` }
+  }
+
+  void logAudit({ action: 'LOGIN_SUCCESS', userEmail: email, userId: user.id, ip })
 
   await createSession({
     userId: user.id,

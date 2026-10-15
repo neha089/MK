@@ -20,6 +20,7 @@ const NAV = [
   { label: 'Staff', href: '/admin/staff', icon: 'manage_accounts' },
   { label: 'Offers', href: '/admin/offers', icon: 'local_offer' },
   { label: 'Reports', href: '/admin/reports', icon: 'bar_chart' },
+  { label: 'Audit Log', href: '/admin/reports/audit', icon: 'policy' },
 ]
 
 type Props = { user: { name: string; email: string; role: string } }

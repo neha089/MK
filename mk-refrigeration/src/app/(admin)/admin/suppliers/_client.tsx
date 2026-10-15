@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState, useEffect, useRef } from 'react'
+import Link from 'next/link'
 import { createSupplier, deleteSupplier } from '@/actions/suppliers'
 import type { SupplierFormState } from '@/actions/suppliers'
 
@@ -145,17 +146,22 @@ export default function SuppliersClient({ suppliers }: { suppliers: Supplier[] }
                     </span>
                   </td>
                   <td className="px-4 py-3.5">
-                    {s._count.purchases === 0 && (
-                      <form action={deleteSupplier.bind(null, s.id)}>
-                        <button
-                          type="submit"
-                          className="p-1.5 hover:bg-error/10 rounded-lg text-on-surface-variant hover:text-error transition-colors"
-                          title="Delete supplier"
-                        >
-                          <span className="material-symbols-outlined text-base">delete</span>
-                        </button>
-                      </form>
-                    )}
+                    <div className="flex items-center justify-end gap-1">
+                      <Link href={`/admin/suppliers/${s.id}/edit`} className="p-1.5 hover:bg-surface-container rounded-lg text-on-surface-variant hover:text-primary transition-colors" title="Edit supplier">
+                        <span className="material-symbols-outlined text-base">edit</span>
+                      </Link>
+                      {s._count.purchases === 0 && (
+                        <form action={deleteSupplier.bind(null, s.id)}>
+                          <button
+                            type="submit"
+                            className="p-1.5 hover:bg-error/10 rounded-lg text-on-surface-variant hover:text-error transition-colors"
+                            title="Delete supplier"
+                          >
+                            <span className="material-symbols-outlined text-base">delete</span>
+                          </button>
+                        </form>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

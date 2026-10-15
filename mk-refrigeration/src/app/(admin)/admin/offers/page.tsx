@@ -59,6 +59,9 @@ export default async function OffersPage() {
               )}
             </div>
             <div className="flex gap-2 shrink-0">
+              <Link href={`/admin/offers/${o.id}/edit`} className="p-2 rounded-xl border border-outline-variant/60 text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors">
+                <span className="material-symbols-outlined text-base">edit</span>
+              </Link>
               <form action={toggleOffer.bind(null, o.id, !o.active)}>
                 <button type="submit" className={`p-2 rounded-xl text-sm font-bold transition-colors border ${o.active ? 'border-outline-variant/60 text-on-surface-variant hover:bg-surface-container' : 'border-primary/30 text-primary bg-primary/10 hover:bg-primary/20'}`}>
                   <span className="material-symbols-outlined text-base">{o.active ? 'visibility_off' : 'visibility'}</span>
