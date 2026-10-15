@@ -20,10 +20,19 @@ export default async function SalesPage() {
           <h1 className="font-headline text-2xl font-extrabold text-on-surface">Sales & Billing</h1>
           <p className="text-on-surface-variant text-sm mt-1">Recent {sales.length} bills</p>
         </div>
-        <Link href="/admin/sales/new" className="btn-primary">
-          <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>receipt_long</span>
-          New Bill
-        </Link>
+        <div className="flex items-center gap-3">
+          <a
+            href="/api/admin/export/sales"
+            className="flex items-center gap-2 border border-outline-variant/60 text-on-surface-variant font-bold px-4 py-2.5 rounded-xl hover:bg-surface-container transition-colors text-sm"
+          >
+            <span className="material-symbols-outlined text-lg">download</span>
+            Export CSV
+          </a>
+          <Link href="/admin/sales/new" className="btn-primary">
+            <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>receipt_long</span>
+            New Bill
+          </Link>
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl border border-outline-variant/40 overflow-hidden">
