@@ -3,6 +3,26 @@
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
+import { SHOP } from '@/lib/constants'
+
+async function notifyOwner(name: string, phone: string, product: string | undefined, message: string | undefined) {
+  const topic = process.env.NTFY_TOPIC
+  if (!topic) return
+  const body = [
+    `From: ${name} (${phone})`,
+    product ? `Product: ${product}` : null,
+    message ? `Message: ${message}` : null,
+  ].filter(Boolean).join('\n')
+  await fetch(`https://ntfy.sh/${topic}`, {
+    method: 'POST',
+    body,
+    headers: {
+      Title: `New Enquiry — ${SHOP.name}`,
+      Priority: 'high',
+      Tags: 'bell,envelope',
+    },
+  }).catch(() => {})
+}
 
 const EnquirySchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -34,6 +54,7 @@ export async function submitEnquiry(_: EnquiryFormState, formData: FormData): Pr
         product: parsed.data.product ?? null,
       },
     })
+    void notifyOwner(parsed.data.name, parsed.data.phone, parsed.data.product, parsed.data.message)
     revalidatePath('/admin/enquiries')
     return { success: true }
   } catch (e: unknown) {
