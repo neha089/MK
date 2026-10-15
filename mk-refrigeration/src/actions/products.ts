@@ -20,8 +20,19 @@ const ProductSchema = z.object({
   inStock: z.coerce.boolean().optional(),
   stockQty: z.coerce.number().int().min(0).optional(),
   barcode: z.string().optional(),
-  imageUrl: z.string().url().optional().or(z.literal('')),
 })
+
+function parseImages(formData: FormData): string[] {
+  try {
+    const raw = formData.get('images')
+    if (!raw) return []
+    const parsed = JSON.parse(raw as string)
+    if (Array.isArray(parsed)) return parsed.filter((u) => typeof u === 'string')
+    return []
+  } catch {
+    return []
+  }
+}
 
 export type ProductFormState = { error?: string; fieldErrors?: Record<string, string[]> } | undefined
 
@@ -34,8 +45,9 @@ export async function createProduct(_: ProductFormState, formData: FormData): Pr
   })
   if (!parsed.success) return { fieldErrors: parsed.error.flatten().fieldErrors }
 
-  const { name, imageUrl, ...rest } = parsed.data
+  const { name, ...rest } = parsed.data
   const slug = slugify(name)
+  const images = parseImages(formData)
 
   try {
     await prisma.product.create({
@@ -43,7 +55,7 @@ export async function createProduct(_: ProductFormState, formData: FormData): Pr
         name,
         slug,
         ...rest,
-        images: imageUrl ? [imageUrl] : [],
+        images,
         mrp: rest.mrp ?? null,
       },
     })
@@ -68,17 +80,12 @@ export async function updateProduct(id: string, _: ProductFormState, formData: F
   })
   if (!parsed.success) return { fieldErrors: parsed.error.flatten().fieldErrors }
 
-  const { imageUrl, ...rest } = parsed.data
+  const images = parseImages(formData)
 
   try {
-    const existing = await prisma.product.findUnique({ where: { id } })
-    const images = imageUrl
-      ? [imageUrl, ...(existing?.images ?? []).filter((i) => i !== imageUrl)]
-      : existing?.images ?? []
-
     await prisma.product.update({
       where: { id },
-      data: { ...rest, images, mrp: rest.mrp ?? null },
+      data: { ...parsed.data, images, mrp: parsed.data.mrp ?? null },
     })
   } catch (e: unknown) {
     return { error: e instanceof Error ? e.message : 'Update failed' }

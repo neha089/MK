@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react'
 import type { ProductFormState } from '@/actions/products'
+import ImageUpload from './ImageUpload'
 
 type Brand = { id: string; name: string }
 type Category = { id: string; name: string }
@@ -95,8 +96,8 @@ export default function ProductForm({ brands, categories, product, action }: Pro
           </div>
         </div>
         <div>
-          <label className="label-xs">Image URL</label>
-          <input name="imageUrl" type="url" defaultValue={product?.images?.[0] ?? ''} className="input-field" placeholder="https://..." />
+          <label className="label-xs">Product Images</label>
+          <ImageUpload initialImages={product?.images ?? []} />
         </div>
         <div className="flex items-center gap-6">
           <label className="flex items-center gap-2 cursor-pointer">
