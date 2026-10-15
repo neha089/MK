@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
 import { formatPrice } from '@/lib/utils'
-import { updateQuotationStatus } from '@/actions/quotations'
+import { updateQuotationStatus, convertQuotationToSale } from '@/actions/quotations'
 
 export const metadata: Metadata = { title: 'Quotations' }
 export const dynamic = 'force-dynamic'
@@ -70,9 +70,10 @@ export default async function QuotationsPage() {
                   <td className="px-4 py-3.5">
                     {q.status === 'PENDING' && (
                       <div className="flex gap-1">
-                        <form action={updateQuotationStatus.bind(null, q.id, 'ACCEPTED')}>
-                          <button type="submit" className="p-1.5 hover:bg-success/10 rounded-lg text-on-surface-variant hover:text-success transition-colors" title="Accept">
-                            <span className="material-symbols-outlined text-base">check_circle</span>
+                        <form action={convertQuotationToSale.bind(null, q.id)}>
+                          <button type="submit" className="flex items-center gap-1 text-xs font-bold px-2.5 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors" title="Convert to Sale">
+                            <span className="material-symbols-outlined text-base">point_of_sale</span>
+                            Convert
                           </button>
                         </form>
                         <form action={updateQuotationStatus.bind(null, q.id, 'REJECTED')}>
