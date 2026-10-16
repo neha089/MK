@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MK Refrigeration — Store & ERP
 
-## Getting Started
+Full-stack Next.js application for MK Refrigeration, Bharuch. Public storefront + admin ERP panel for sales, purchases, inventory, quotations, and enquiries.
 
-First, run the development server:
+## Tech stack
+
+- **Next.js 15** App Router (Server Components, Server Actions)
+- **Prisma 5** + PostgreSQL (Supabase)
+- **Tailwind CSS** (Material Design 3 tokens)
+- **Custom JWT auth** (`jose` — no NextAuth dependency)
+
+## Prerequisites
+
+- Node.js 20+
+- A PostgreSQL database (Supabase recommended)
+
+## Local setup
 
 ```bash
+# 1. Install dependencies
+npm install
+
+# 2. Copy and fill in environment variables
+cp .env.example .env.local
+
+# 3. Push schema to database and seed initial admin
+npx prisma db push
+npx prisma db seed   # creates default admin user (see prisma/seed.ts)
+
+# 4. Start dev server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) for the storefront.  
+Admin panel: [http://localhost:3000/admin/login](http://localhost:3000/admin/login)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+See `.env.example` for all variables. Required:
 
-## Learn More
+| Variable | Description |
+|---|---|
+| `DATABASE_URL` | Supabase pooler URL (with `?pgbouncer=true`) |
+| `DIRECT_URL` | Supabase direct URL (for migrations) |
+| `SESSION_SECRET` | Random 32-byte base64 string — `openssl rand -base64 32` |
 
-To learn more about Next.js, take a look at the following resources:
+Optional:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Variable | Description |
+|---|---|
+| `NTFY_TOPIC` | [ntfy.sh](https://ntfy.sh) topic for new enquiry push notifications |
+| `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name (product image uploads) |
+| `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` | Cloudinary credentials |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Schema migrations
 
-## Deploy on Vercel
+This project uses `prisma db push` (no migration history). After schema changes:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npx prisma db push
+npx prisma generate
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deployment (Vercel)
+
+1. Set all environment variables in the Vercel dashboard
+2. Add a build command override if needed: `npx prisma generate && next build`
+3. Push to `main` — Vercel auto-deploys
+
+## Project structure
+
+```
+src/
+  app/
+    (public)/          # Public storefront (/, /products, /categories, /brands, /contact…)
+    (admin)/admin/     # Protected admin ERP panel
+    api/admin/         # API routes (CSV exports)
+  actions/             # Server Actions (sales, purchases, products, enquiries…)
+  lib/                 # Shared utilities (db, session, audit, rate-limit, utils)
+prisma/
+  schema.prisma        # Database schema
+```
