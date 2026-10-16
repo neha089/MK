@@ -17,9 +17,21 @@ export default async function CustomersPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-headline text-2xl font-extrabold text-on-surface">Customers</h1>
-        <p className="text-on-surface-variant text-sm mt-1">{customers.length} total customers</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="font-headline text-2xl font-extrabold text-on-surface">Customers</h1>
+          <p className="text-on-surface-variant text-sm mt-1">{customers.length} total customers</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <a href="/api/admin/export/customers" className="flex items-center gap-1.5 shrink-0 border border-outline-variant/60 text-on-surface-variant font-bold px-4 py-2.5 rounded-xl hover:bg-surface-container transition-colors text-sm">
+            <span className="material-symbols-outlined text-base">download</span>
+            Export CSV
+          </a>
+          <Link href="/admin/customers/new" className="btn-primary">
+            <span className="material-symbols-outlined text-xl">person_add</span>
+            Add Customer
+          </Link>
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl border border-outline-variant/40 overflow-hidden">

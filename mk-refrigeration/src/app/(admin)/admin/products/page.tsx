@@ -3,28 +3,50 @@ import Link from 'next/link'
 import { prisma } from '@/lib/db'
 import { formatPrice } from '@/lib/utils'
 import { toggleStock, deleteProduct } from '@/actions/products'
+import ProductFilters from './_filters'
 
 export const metadata: Metadata = { title: 'Products' }
 export const dynamic = 'force-dynamic'
 
-async function getProducts() {
-  try {
-    return await prisma.product.findMany({
+type SearchParams = Promise<{ category?: string; brand?: string; stock?: string; q?: string }>
+
+export default async function ProductsPage({ searchParams }: { searchParams: SearchParams }) {
+  const { category, brand, stock, q } = await searchParams
+
+  const where = {
+    ...(category ? { categoryId: category } : {}),
+    ...(brand ? { brandId: brand } : {}),
+    ...(stock === 'in' ? { inStock: true } : stock === 'out' ? { inStock: false } : {}),
+    ...(q ? {
+      OR: [
+        { name: { contains: q, mode: 'insensitive' as const } },
+        { model: { contains: q, mode: 'insensitive' as const } },
+        { barcode: { contains: q, mode: 'insensitive' as const } },
+      ],
+    } : {}),
+  }
+
+  const [products, categories, brands] = await Promise.all([
+    prisma.product.findMany({
+      where,
       include: { brand: true, category: true },
       orderBy: { createdAt: 'desc' },
-    })
-  } catch { return [] }
-}
+    }).catch(() => []),
+    prisma.category.findMany({ orderBy: { order: 'asc' } }).catch(() => []),
+    prisma.brand.findMany({ orderBy: { name: 'asc' } }).catch(() => []),
+  ])
 
-export default async function ProductsPage() {
-  const products = await getProducts()
+  const activeFilters = [category, brand, stock, q].filter(Boolean).length
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-headline text-2xl font-extrabold text-on-surface">Products</h1>
-          <p className="text-on-surface-variant text-sm mt-1">{products.length} products in catalogue</p>
+          <p className="text-on-surface-variant text-sm mt-1">
+            {products.length} product{products.length !== 1 ? 's' : ''}
+            {activeFilters > 0 && <span className="text-primary ml-1">(filtered)</span>}
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <a href="/api/admin/export/products" className="flex items-center gap-1.5 shrink-0 border border-outline-variant/60 text-on-surface-variant font-bold px-4 py-2.5 rounded-xl hover:bg-surface-container transition-colors text-sm">
@@ -37,6 +59,15 @@ export default async function ProductsPage() {
           </Link>
         </div>
       </div>
+
+      <ProductFilters
+        categories={categories}
+        brands={brands}
+        category={category}
+        brand={brand}
+        stock={stock}
+        q={q}
+      />
 
       <div className="bg-white rounded-2xl border border-outline-variant/40 overflow-hidden">
         <div className="overflow-x-auto">
@@ -57,8 +88,11 @@ export default async function ProductsPage() {
                 <tr>
                   <td colSpan={7} className="text-center py-16 text-on-surface-variant">
                     <span className="material-symbols-outlined text-5xl block mb-2 opacity-30">inventory_2</span>
-                    No products yet.{' '}
-                    <Link href="/admin/products/new" className="text-primary font-bold">Add one</Link>
+                    {activeFilters > 0 ? (
+                      <>No products match your filters. <Link href="/admin/products" className="text-primary font-bold">Clear filters</Link></>
+                    ) : (
+                      <>No products yet. <Link href="/admin/products/new" className="text-primary font-bold">Add one</Link></>
+                    )}
                   </td>
                 </tr>
               ) : products.map((p) => (
