@@ -53,7 +53,9 @@ export default async function PurchasesPage() {
                 <tr><td colSpan={6} className="text-center py-16 text-on-surface-variant">No purchases yet.</td></tr>
               ) : purchases.map((p) => (
                 <tr key={p.id} className="hover:bg-surface-container/50 transition-colors">
-                  <td className="px-5 py-3.5 font-mono font-bold text-primary text-xs">{p.invoiceNo ?? '—'}</td>
+                  <td className="px-5 py-3.5">
+                    <Link href={`/admin/purchases/${p.id}`} className="font-mono font-bold text-primary text-xs hover:underline">{p.invoiceNo ?? p.id.slice(0, 8)}</Link>
+                  </td>
                   <td className="px-4 py-3.5 text-on-surface-variant text-xs">{p.supplier?.name ?? '—'}</td>
                   <td className="px-4 py-3.5 text-on-surface-variant text-xs">
                     {p.items.map((i) => i.product.name).join(', ')}

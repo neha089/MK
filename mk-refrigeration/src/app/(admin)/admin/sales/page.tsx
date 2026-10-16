@@ -52,8 +52,10 @@ export default async function SalesPage() {
               {sales.length === 0 ? (
                 <tr><td colSpan={5} className="text-center py-16 text-on-surface-variant">No sales yet.</td></tr>
               ) : sales.map((s) => (
-                <tr key={s.id} className="hover:bg-surface-container/50 transition-colors">
-                  <td className="px-5 py-3.5 font-mono font-bold text-primary text-xs">{s.invoiceNo}</td>
+                <tr key={s.id} className="hover:bg-surface-container/50 transition-colors cursor-pointer">
+                  <td className="px-5 py-3.5">
+                    <Link href={`/admin/sales/${s.id}`} className="font-mono font-bold text-primary text-xs hover:underline">{s.invoiceNo}</Link>
+                  </td>
                   <td className="px-4 py-3.5">
                     <p className="font-bold text-on-surface">{s.customerName ?? '—'}</p>
                     {s.customerPhone && <p className="text-xs text-on-surface-variant">{s.customerPhone}</p>}

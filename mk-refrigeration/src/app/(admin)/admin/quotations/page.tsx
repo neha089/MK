@@ -60,7 +60,9 @@ export default async function QuotationsPage() {
                 <tr><td colSpan={8} className="text-center py-16 text-on-surface-variant">No quotations yet.</td></tr>
               ) : quotations.map((q) => (
                 <tr key={q.id} className="hover:bg-surface-container/50 transition-colors">
-                  <td className="px-5 py-3.5 font-mono font-bold text-primary text-xs">{q.quoteNo}</td>
+                  <td className="px-5 py-3.5">
+                    <Link href={`/admin/quotations/${q.id}`} className="font-mono font-bold text-primary text-xs hover:underline">{q.quoteNo}</Link>
+                  </td>
                   <td className="px-4 py-3.5">
                     <p className="font-bold text-on-surface">{q.customerName ?? '—'}</p>
                     {q.customerPhone && <p className="text-xs text-on-surface-variant">{q.customerPhone}</p>}

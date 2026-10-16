@@ -47,7 +47,7 @@ export default async function BrandsPage() {
               {featured.map((brand) => (
                 <Link
                   key={brand.id}
-                  href={`/products?brand=${brand.id}`}
+                  href={`/brands/${brand.slug}`}
                   className="group bg-white rounded-3xl border-2 border-primary/20 p-6 flex flex-col items-center text-center hover:border-primary hover:shadow-lg transition-all duration-300"
                 >
                   {brand.logo ? (
@@ -76,7 +76,7 @@ export default async function BrandsPage() {
               {regular.map((brand) => (
                 <Link
                   key={brand.id}
-                  href={`/products?brand=${brand.id}`}
+                  href={`/brands/${brand.slug}`}
                   className="group bg-white rounded-2xl border border-outline-variant/40 p-5 flex flex-col items-center text-center hover:border-primary/40 hover:shadow-md transition-all duration-300"
                 >
                   {brand.logo ? (
