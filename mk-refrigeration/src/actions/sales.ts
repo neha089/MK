@@ -46,43 +46,58 @@ export async function createSale(_: SaleFormState, formData: FormData): Promise<
   const totalAmount = subtotal - discountTotal
 
   try {
-    const sale = await prisma.sale.create({
-      data: {
-        invoiceNo: generateInvoiceNo('INV'),
-        userId: session.userId,
-        customerName: parsed.data.customerName,
-        customerPhone: parsed.data.customerPhone ?? null,
-        subtotal,
-        discount: discountTotal,
-        gstAmount: 0,
-        totalAmount,
-        notes: parsed.data.notes ?? null,
-        items: {
-          create: parsed.data.items.map((item) => ({
-            productId: item.productId,
-            qty: item.qty,
-            price: item.price,
-            discount: item.discount ?? 0,
-          })),
-        },
-      },
-    })
+    const sale = await prisma.$transaction(async (tx) => {
+      for (const item of parsed.data.items) {
+        const product = await tx.product.findUnique({
+          where: { id: item.productId },
+          select: { stockQty: true, name: true },
+        })
+        if (!product) throw new Error(`Product not found`)
+        if (product.stockQty < item.qty) {
+          throw new Error(`Insufficient stock for "${product.name}". Available: ${product.stockQty}`)
+        }
+      }
 
-    for (const item of parsed.data.items) {
-      await prisma.product.update({
-        where: { id: item.productId },
-        data: { stockQty: { decrement: item.qty } },
-      })
-      await prisma.inventoryLog.create({
+      const saleRecord = await tx.sale.create({
         data: {
-          productId: item.productId,
-          type: 'OUT',
-          qty: item.qty,
-          refId: sale.id,
-          note: `Sale: ${sale.invoiceNo}`,
+          invoiceNo: generateInvoiceNo('INV'),
+          userId: session.userId,
+          customerName: parsed.data.customerName,
+          customerPhone: parsed.data.customerPhone ?? null,
+          subtotal,
+          discount: discountTotal,
+          gstAmount: 0,
+          totalAmount,
+          notes: parsed.data.notes ?? null,
+          items: {
+            create: parsed.data.items.map((item) => ({
+              productId: item.productId,
+              qty: item.qty,
+              price: item.price,
+              discount: item.discount ?? 0,
+            })),
+          },
         },
       })
-    }
+
+      for (const item of parsed.data.items) {
+        await tx.product.update({
+          where: { id: item.productId },
+          data: { stockQty: { decrement: item.qty } },
+        })
+        await tx.inventoryLog.create({
+          data: {
+            productId: item.productId,
+            type: 'OUT',
+            qty: item.qty,
+            refId: saleRecord.id,
+            note: `Sale: ${saleRecord.invoiceNo}`,
+          },
+        })
+      }
+
+      return saleRecord
+    })
 
     revalidatePath('/admin/sales')
     revalidatePath('/admin/inventory')

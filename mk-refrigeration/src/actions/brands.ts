@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { slugify } from '@/lib/utils'
 import { revalidatePath } from 'next/cache'
+import { getSession } from '@/lib/session'
 
 const Schema = z.object({
   name: z.string().min(1),
@@ -15,6 +16,8 @@ const Schema = z.object({
 export type BrandFormState = { error?: string } | undefined
 
 export async function createBrand(_: BrandFormState, formData: FormData): Promise<BrandFormState> {
+  const session = await getSession()
+  if (!session) return { error: 'Unauthorized' }
   const raw = Object.fromEntries(formData)
   const parsed = Schema.safeParse({ ...raw, featured: raw.featured === 'on' })
   if (!parsed.success) return { error: parsed.error.issues[0].message }
@@ -31,6 +34,8 @@ export async function createBrand(_: BrandFormState, formData: FormData): Promis
 }
 
 export async function updateBrand(id: string, _: BrandFormState, formData: FormData): Promise<BrandFormState> {
+  const session = await getSession()
+  if (!session) return { error: 'Unauthorized' }
   const raw = Object.fromEntries(formData)
   const parsed = Schema.safeParse({ ...raw, featured: raw.featured === 'on' })
   if (!parsed.success) return { error: parsed.error.issues[0].message }
@@ -47,6 +52,8 @@ export async function updateBrand(id: string, _: BrandFormState, formData: FormD
 }
 
 export async function deleteBrand(id: string) {
+  const session = await getSession()
+  if (!session) return
   await prisma.brand.delete({ where: { id } })
   revalidatePath('/admin/brands')
 }

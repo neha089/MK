@@ -32,6 +32,7 @@ export function generateInvoiceNo(prefix: string) {
   const date = new Date()
   const year = date.getFullYear().toString().slice(-2)
   const month = String(date.getMonth() + 1).padStart(2, '0')
-  const rand = Math.floor(Math.random() * 9000) + 1000
-  return `${prefix}${year}${month}${rand}`
+  // Last 6 digits of ms timestamp — ~1M unique slots vs. 9K with Math.random()
+  const seq = String(Date.now()).slice(-6)
+  return `${prefix}${year}${month}${seq}`
 }

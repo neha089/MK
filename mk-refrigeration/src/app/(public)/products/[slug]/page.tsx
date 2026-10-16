@@ -72,9 +72,15 @@ export default async function ProductPage({ params }: Props) {
     },
   }
 
+  // Escape </> to prevent early tag termination in JSON-LD
+  const jsonLdString = JSON.stringify(jsonLd)
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/&/g, '\\u0026')
+
   return (
     <>
-    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdString }} />
     <div className="py-16 px-margin-desktop max-w-container-max mx-auto">
       <nav className="text-xs text-on-surface-variant mb-6 flex items-center gap-1 flex-wrap">
         <Link href="/" className="hover:text-primary transition-colors">Home</Link>

@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { slugify } from '@/lib/utils'
 import { revalidatePath } from 'next/cache'
+import { getSession } from '@/lib/session'
 
 const Schema = z.object({
   name: z.string().min(2),
@@ -16,6 +17,8 @@ const Schema = z.object({
 export type CatFormState = { error?: string } | undefined
 
 export async function createCategory(_: CatFormState, formData: FormData): Promise<CatFormState> {
+  const session = await getSession()
+  if (!session) return { error: 'Unauthorized' }
   const parsed = Schema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) return { error: parsed.error.issues[0].message }
 
@@ -31,6 +34,8 @@ export async function createCategory(_: CatFormState, formData: FormData): Promi
 }
 
 export async function updateCategory(id: string, _: CatFormState, formData: FormData): Promise<CatFormState> {
+  const session = await getSession()
+  if (!session) return { error: 'Unauthorized' }
   const parsed = Schema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) return { error: parsed.error.issues[0].message }
 
@@ -46,6 +51,8 @@ export async function updateCategory(id: string, _: CatFormState, formData: Form
 }
 
 export async function deleteCategory(id: string) {
+  const session = await getSession()
+  if (!session) return
   await prisma.category.delete({ where: { id } })
   revalidatePath('/admin/categories')
 }

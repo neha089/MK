@@ -3,6 +3,7 @@
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
+import { getSession } from '@/lib/session'
 
 const SupplierSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -15,6 +16,8 @@ const SupplierSchema = z.object({
 export type SupplierFormState = { error?: string; success?: boolean } | undefined
 
 export async function createSupplier(_: SupplierFormState, formData: FormData): Promise<SupplierFormState> {
+  const session = await getSession()
+  if (!session) return { error: 'Unauthorized' }
   const parsed = SupplierSchema.safeParse({
     name: formData.get('name'),
     phone: formData.get('phone') || undefined,
@@ -43,6 +46,8 @@ export async function createSupplier(_: SupplierFormState, formData: FormData): 
 }
 
 export async function updateSupplier(id: string, _: SupplierFormState, formData: FormData): Promise<SupplierFormState> {
+  const session = await getSession()
+  if (!session) return { error: 'Unauthorized' }
   const parsed = SupplierSchema.safeParse({
     name: formData.get('name'),
     phone: formData.get('phone') || undefined,
@@ -71,6 +76,8 @@ export async function updateSupplier(id: string, _: SupplierFormState, formData:
 }
 
 export async function deleteSupplier(id: string) {
+  const session = await getSession()
+  if (!session) return
   await prisma.supplier.delete({ where: { id } })
   revalidatePath('/admin/suppliers')
   revalidatePath('/admin/purchases/new')

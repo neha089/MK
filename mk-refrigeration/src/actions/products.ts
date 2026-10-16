@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { slugify } from '@/lib/utils'
 import { revalidatePath } from 'next/cache'
+import { getSession } from '@/lib/session'
 
 const ProductSchema = z.object({
   name: z.string().min(2),
@@ -37,6 +38,8 @@ function parseImages(formData: FormData): string[] {
 export type ProductFormState = { error?: string; fieldErrors?: Record<string, string[]> } | undefined
 
 export async function createProduct(_: ProductFormState, formData: FormData): Promise<ProductFormState> {
+  const session = await getSession()
+  if (!session) return { error: 'Unauthorized' }
   const raw = Object.fromEntries(formData)
   const parsed = ProductSchema.safeParse({
     ...raw,
@@ -72,6 +75,8 @@ export async function createProduct(_: ProductFormState, formData: FormData): Pr
 }
 
 export async function updateProduct(id: string, _: ProductFormState, formData: FormData): Promise<ProductFormState> {
+  const session = await getSession()
+  if (!session) return { error: 'Unauthorized' }
   const raw = Object.fromEntries(formData)
   const parsed = ProductSchema.safeParse({
     ...raw,
@@ -96,11 +101,15 @@ export async function updateProduct(id: string, _: ProductFormState, formData: F
 }
 
 export async function deleteProduct(id: string) {
+  const session = await getSession()
+  if (!session) return
   await prisma.product.delete({ where: { id } })
   revalidatePath('/admin/products')
 }
 
 export async function toggleStock(id: string, inStock: boolean) {
+  const session = await getSession()
+  if (!session) return
   await prisma.product.update({ where: { id }, data: { inStock } })
   revalidatePath('/admin/products')
 }

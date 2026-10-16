@@ -43,38 +43,40 @@ export async function createPurchase(_: PurchaseFormState, formData: FormData): 
   const totalAmount = parsed.data.items.reduce((s, i) => s + i.qty * i.costPrice, 0)
 
   try {
-    const purchase = await prisma.purchase.create({
-      data: {
-        invoiceNo: generateInvoiceNo('PUR'),
-        userId: session.userId,
-        supplierId: parsed.data.supplierId ?? null,
-        totalAmount,
-        notes: parsed.data.notes ?? null,
-        items: {
-          create: parsed.data.items.map((item) => ({
-            productId: item.productId,
-            qty: item.qty,
-            costPrice: item.costPrice,
-          })),
-        },
-      },
-    })
-
-    for (const item of parsed.data.items) {
-      await prisma.product.update({
-        where: { id: item.productId },
-        data: { stockQty: { increment: item.qty }, inStock: true },
-      })
-      await prisma.inventoryLog.create({
+    await prisma.$transaction(async (tx) => {
+      const purchase = await tx.purchase.create({
         data: {
-          productId: item.productId,
-          type: 'IN',
-          qty: item.qty,
-          refId: purchase.id,
-          note: `Purchase: ${purchase.invoiceNo}`,
+          invoiceNo: generateInvoiceNo('PUR'),
+          userId: session.userId,
+          supplierId: parsed.data.supplierId ?? null,
+          totalAmount,
+          notes: parsed.data.notes ?? null,
+          items: {
+            create: parsed.data.items.map((item) => ({
+              productId: item.productId,
+              qty: item.qty,
+              costPrice: item.costPrice,
+            })),
+          },
         },
       })
-    }
+
+      for (const item of parsed.data.items) {
+        await tx.product.update({
+          where: { id: item.productId },
+          data: { stockQty: { increment: item.qty }, inStock: true },
+        })
+        await tx.inventoryLog.create({
+          data: {
+            productId: item.productId,
+            type: 'IN',
+            qty: item.qty,
+            refId: purchase.id,
+            note: `Purchase: ${purchase.invoiceNo}`,
+          },
+        })
+      }
+    })
   } catch (e: unknown) {
     return { error: e instanceof Error ? e.message : 'Failed to create purchase' }
   }

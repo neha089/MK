@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache'
 import { SHOP } from '@/lib/constants'
 import { logAudit, getClientIp } from '@/lib/audit'
 import { checkEnquiryRateLimit } from '@/lib/ratelimit'
+import { getSession } from '@/lib/session'
 
 async function notifyOwner(name: string, phone: string, product: string | undefined, message: string | undefined) {
   const topic = process.env.NTFY_TOPIC
@@ -70,11 +71,15 @@ export async function submitEnquiry(_: EnquiryFormState, formData: FormData): Pr
 }
 
 export async function markEnquiryRead(id: string) {
+  const session = await getSession()
+  if (!session) return
   await prisma.enquiry.update({ where: { id }, data: { read: true, status: 'CONTACTED' } })
   revalidatePath('/admin/enquiries')
 }
 
 export async function updateEnquiryStatus(id: string, status: string) {
+  const session = await getSession()
+  if (!session) return
   await prisma.enquiry.update({
     where: { id },
     data: { status, read: status !== 'NEW' },

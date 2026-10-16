@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { getSession } from '@/lib/session'
 
 const CustomerSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -16,6 +17,8 @@ const CustomerSchema = z.object({
 export type CustomerFormState = { error?: string; fieldErrors?: Record<string, string[]>; success?: boolean } | undefined
 
 export async function createCustomer(_: CustomerFormState, formData: FormData): Promise<CustomerFormState> {
+  const session = await getSession()
+  if (!session) return { error: 'Unauthorized' }
   const parsed = CustomerSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) return { fieldErrors: parsed.error.flatten().fieldErrors }
 
@@ -37,6 +40,8 @@ export async function createCustomer(_: CustomerFormState, formData: FormData): 
 }
 
 export async function updateCustomer(id: string, _: CustomerFormState, formData: FormData): Promise<CustomerFormState> {
+  const session = await getSession()
+  if (!session) return { error: 'Unauthorized' }
   const parsed = CustomerSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) return { fieldErrors: parsed.error.flatten().fieldErrors }
 

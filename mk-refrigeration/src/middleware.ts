@@ -2,20 +2,17 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { decrypt } from '@/lib/session'
 
-const ADMIN_PATHS = [
-  '/admin/dashboard', '/admin/products', '/admin/categories', '/admin/brands',
-  '/admin/inventory', '/admin/suppliers', '/admin/purchases', '/admin/sales',
-  '/admin/quotations', '/admin/customers', '/admin/enquiries', '/admin/staff',
-  '/admin/offers', '/admin/reports',
-]
-
-// These paths require role === 'ADMIN'
+// These paths require role === 'ADMIN' (on top of being authenticated)
 const ADMIN_ONLY_PATHS = ['/admin/staff', '/admin/reports']
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  const isAdminProtected = ADMIN_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'))
+  // Deny-by-default: every /admin/* path is protected except /admin/login
+  const isAdminProtected =
+    (pathname === '/admin' || pathname.startsWith('/admin/')) &&
+    pathname !== '/admin/login' &&
+    !pathname.startsWith('/admin/login/')
 
   if (!isAdminProtected) {
     return withSecurityHeaders(NextResponse.next())
