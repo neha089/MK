@@ -20,6 +20,8 @@ const NAV = [
   { label: 'Staff', href: '/admin/staff', icon: 'manage_accounts' },
   { label: 'Offers', href: '/admin/offers', icon: 'local_offer' },
   { label: 'Reports', href: '/admin/reports', icon: 'bar_chart' },
+  { label: 'Sales Analytics', href: '/admin/reports/sales', icon: 'trending_up' },
+  { label: 'Enquiry Analytics', href: '/admin/reports/enquiries', icon: 'query_stats' },
   { label: 'Inventory Report', href: '/admin/reports/inventory', icon: 'analytics' },
   { label: 'Low Stock', href: '/admin/reports/low-stock', icon: 'warning' },
   { label: 'Stock Movement', href: '/admin/reports/movement', icon: 'swap_vert' },

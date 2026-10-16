@@ -49,8 +49,16 @@ export default async function StockMovementPage({ searchParams }: { searchParams
           <span className="material-symbols-outlined text-sm">chevron_right</span>
           <span>Stock Movement</span>
         </nav>
-        <h1 className="font-headline text-2xl font-extrabold text-on-surface">Stock Movement Log</h1>
-        <p className="text-on-surface-variant text-sm mt-0.5">All inventory IN / OUT / ADJUST events</p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="font-headline text-2xl font-extrabold text-on-surface">Stock Movement Log</h1>
+            <p className="text-on-surface-variant text-sm mt-0.5">All inventory IN / OUT / ADJUST events</p>
+          </div>
+          <a href="/api/admin/export/inventory" className="flex items-center gap-1.5 shrink-0 border border-outline-variant/60 text-on-surface-variant font-bold px-4 py-2.5 rounded-xl hover:bg-surface-container transition-colors text-sm">
+            <span className="material-symbols-outlined text-base">download</span>
+            Export CSV
+          </a>
+        </div>
       </div>
 
       {/* Filters */}
