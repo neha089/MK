@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
 import { SHOP } from '@/lib/constants'
@@ -33,6 +34,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
       where,
       include: { brand: true, category: true },
       orderBy: [{ featured: 'desc' }, { createdAt: 'desc' }],
+      take: 200,
     }).catch(() => []),
     prisma.category.findMany({ orderBy: { order: 'asc' } }).catch(() => []),
     prisma.brand.findMany({ orderBy: { name: 'asc' } }).catch(() => []),
@@ -193,7 +195,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
                       {/* Image */}
                       <div className="aspect-square bg-surface-container flex items-center justify-center relative overflow-hidden">
                         {p.images?.[0] ? (
-                          <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                          <Image src={p.images[0]} alt={p.name} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover group-hover:scale-105 transition-transform duration-300" />
                         ) : (
                           <span className="material-symbols-outlined text-5xl text-on-surface-variant/30" style={{ fontVariationSettings: "'FILL' 1" }}>ac_unit</span>
                         )}

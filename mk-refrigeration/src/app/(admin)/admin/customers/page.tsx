@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic'
 export default async function CustomersPage() {
   const customers = await prisma.customer.findMany({
     orderBy: { createdAt: 'desc' },
+    take: 200,
     include: {
       _count: { select: { sales: true, quotations: true } },
       sales: { select: { totalAmount: true } },

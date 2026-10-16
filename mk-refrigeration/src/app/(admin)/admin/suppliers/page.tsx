@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic'
 export default async function SuppliersPage() {
   const suppliers = await prisma.supplier.findMany({
     orderBy: { name: 'asc' },
+    take: 100,
     include: { _count: { select: { purchases: true } } },
   }).catch(() => [])
 

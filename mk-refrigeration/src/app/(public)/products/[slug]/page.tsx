@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
@@ -60,6 +61,7 @@ export default async function ProductPage({ params }: Props) {
     '@type': 'Product',
     name: product.name,
     description: product.description ?? `${product.name} available at MK Refrigeration, Bharuch.`,
+    image: product.images?.[0] ?? undefined,
     brand: { '@type': 'Brand', name: product.brand?.name ?? 'Unknown' },
     offers: {
       '@type': 'Offer',
@@ -102,8 +104,7 @@ export default async function ProductPage({ params }: Props) {
         {/* Image */}
         <div className="bg-white rounded-3xl border border-outline-variant/40 p-8 flex items-center justify-center aspect-square">
           {product.images?.[0] ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={product.images?.[0]} alt={product.name} className="object-contain max-h-80 w-full" />
+            <Image src={product.images[0]} alt={product.name} width={480} height={480} className="object-contain max-h-80 w-full" />
           ) : (
             <span className="material-symbols-outlined text-[120px] text-primary/20" style={{ fontVariationSettings: "'FILL' 1" }}>
               devices_other

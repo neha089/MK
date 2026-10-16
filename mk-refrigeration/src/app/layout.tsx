@@ -53,7 +53,7 @@ export const metadata: Metadata = {
     googleBot: { index: true, follow: true },
   },
   alternates: {
-    canonical: 'https://mkrefrigeration.vercel.app',
+    canonical: 'https://mkrefrigeration.com',
   },
 }
 
@@ -108,7 +108,10 @@ export default function RootLayout({
               priceRange: '₹₹',
               currenciesAccepted: 'INR',
               paymentAccepted: 'Cash, UPI, Card',
-            }),
+            })
+              .replace(/</g, '\\u003c')
+              .replace(/>/g, '\\u003e')
+              .replace(/&/g, '\\u0026'),
           }}
         />
         {children}

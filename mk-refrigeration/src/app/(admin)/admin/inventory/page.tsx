@@ -10,6 +10,7 @@ export default async function InventoryPage() {
   const [products, logs] = await Promise.all([
     prisma.product.findMany({
       orderBy: { name: 'asc' },
+      take: 500,
       select: { id: true, name: true, model: true, stockQty: true, inStock: true, brand: { select: { name: true } }, category: { select: { name: true } } },
     }).catch(() => []),
     prisma.inventoryLog.findMany({

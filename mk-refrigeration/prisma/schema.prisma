@@ -77,6 +77,10 @@ model Product {
   saleItems      SaleItem[]
   quotationItems QuotationItem[]
   inventoryLogs  InventoryLog[]
+
+  @@index([brandId])
+  @@index([categoryId])
+  @@index([inStock])
 }
 
 model Supplier {
@@ -102,6 +106,10 @@ model Purchase {
   userId       String
   items        PurchaseItem[]
   createdAt    DateTime       @default(now())
+
+  @@index([userId])
+  @@index([supplierId])
+  @@index([purchaseDate])
 }
 
 model PurchaseItem {
@@ -113,6 +121,9 @@ model PurchaseItem {
   qty        Int
   costPrice  Decimal  @db.Decimal(10, 2)
   createdAt  DateTime @default(now())
+
+  @@index([purchaseId])
+  @@index([productId])
 }
 
 model Customer {
@@ -145,6 +156,10 @@ model Sale {
   userId       String
   items        SaleItem[]
   createdAt    DateTime   @default(now())
+
+  @@index([userId])
+  @@index([customerId])
+  @@index([saleDate])
 }
 
 model SaleItem {
@@ -156,6 +171,9 @@ model SaleItem {
   qty       Int
   price     Decimal @db.Decimal(10, 2)
   discount  Decimal @default(0) @db.Decimal(10, 2)
+
+  @@index([saleId])
+  @@index([productId])
 }
 
 model Quotation {
@@ -193,6 +211,9 @@ model QuotationItem {
   qty         Int
   price       Decimal   @db.Decimal(10, 2)
   discount    Decimal   @default(0) @db.Decimal(10, 2)
+
+  @@index([quotationId])
+  @@index([productId])
 }
 
 model InventoryLog {
@@ -204,6 +225,9 @@ model InventoryLog {
   note      String?
   refId     String?
   createdAt DateTime      @default(now())
+
+  @@index([productId])
+  @@index([createdAt])
 }
 
 enum InventoryType {
@@ -234,6 +258,9 @@ model Enquiry {
   read      Boolean  @default(false)
   status    String   @default("NEW")
   createdAt DateTime @default(now())
+
+  @@index([status])
+  @@index([createdAt])
 }
 
 model AuditLog {

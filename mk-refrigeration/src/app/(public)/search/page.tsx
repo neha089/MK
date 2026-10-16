@@ -1,9 +1,13 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
 import { formatPrice } from '@/lib/utils'
 
-export const metadata: Metadata = { title: 'Search Products' }
+export const metadata: Metadata = {
+  title: 'Search Products',
+  description: 'Search for AC, Refrigerators, Washing Machines, Deep Freezers and other home appliances at MK Refrigeration, Bharuch.',
+}
 export const dynamic = 'force-dynamic'
 
 export default async function SearchPage({
@@ -108,9 +112,9 @@ export default async function SearchPage({
               className="bg-white rounded-2xl border border-outline-variant/40 overflow-hidden hover:shadow-lg hover:border-primary/30 transition-all group"
             >
               {/* Image placeholder */}
-              <div className="aspect-square bg-surface-container flex items-center justify-center">
+              <div className="aspect-square bg-surface-container flex items-center justify-center relative overflow-hidden">
                 {p.images[0] ? (
-                  <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" />
+                  <Image src={p.images[0]} alt={p.name} fill sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw" className="object-cover" />
                 ) : (
                   <span className="material-symbols-outlined text-5xl text-on-surface-variant/30">
                     inventory_2
