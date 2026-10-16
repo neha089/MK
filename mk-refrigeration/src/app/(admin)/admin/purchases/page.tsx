@@ -6,19 +6,32 @@ import { formatPrice } from '@/lib/utils'
 export const metadata: Metadata = { title: 'Purchases' }
 export const dynamic = 'force-dynamic'
 
-export default async function PurchasesPage() {
-  const purchases = await prisma.purchase.findMany({
-    orderBy: { createdAt: 'desc' },
-    take: 50,
-    include: { supplier: true, createdBy: true, items: { include: { product: { select: { name: true } } } } },
-  }).catch(() => [])
+const PAGE_SIZE = 50
+
+type SearchParams = Promise<{ page?: string }>
+
+export default async function PurchasesPage({ searchParams }: { searchParams: SearchParams }) {
+  const { page: pageParam } = await searchParams
+  const page = Math.max(1, parseInt(pageParam ?? '1') || 1)
+
+  const [purchases, totalCount] = await Promise.all([
+    prisma.purchase.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: PAGE_SIZE,
+      skip: (page - 1) * PAGE_SIZE,
+      include: { supplier: true, createdBy: true, items: { include: { product: { select: { name: true } } } } },
+    }).catch(() => []),
+    prisma.purchase.count().catch(() => 0),
+  ])
+
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE)
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-headline text-2xl font-extrabold text-on-surface">Purchases / Inload</h1>
-          <p className="text-on-surface-variant text-sm mt-1">Recent {purchases.length} purchase entries</p>
+          <p className="text-on-surface-variant text-sm mt-1">{totalCount} total purchase entr{totalCount !== 1 ? 'ies' : 'y'}</p>
         </div>
         <div className="flex items-center gap-3">
           <a
@@ -71,6 +84,31 @@ export default async function PurchasesPage() {
           </table>
         </div>
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between text-sm">
+          <p className="text-on-surface-variant">
+            Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, totalCount)} of {totalCount}
+          </p>
+          <div className="flex gap-1">
+            {page > 1 && (
+              <Link href={`/admin/purchases?page=${page - 1}`} className="px-3 py-2 rounded-xl border border-outline-variant/60 text-on-surface-variant hover:bg-surface-container transition-colors">
+                ← Prev
+              </Link>
+            )}
+            {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => i + 1).map((p) => (
+              <Link key={p} href={`/admin/purchases?page=${p}`} className={`px-3 py-2 rounded-xl border transition-colors ${p === page ? 'bg-primary text-on-primary border-primary' : 'border-outline-variant/60 text-on-surface-variant hover:bg-surface-container'}`}>
+                {p}
+              </Link>
+            ))}
+            {page < totalPages && (
+              <Link href={`/admin/purchases?page=${page + 1}`} className="px-3 py-2 rounded-xl border border-outline-variant/60 text-on-surface-variant hover:bg-surface-container transition-colors">
+                Next →
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

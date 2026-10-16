@@ -7,6 +7,8 @@ import { updateQuotationStatus, convertQuotationToSale } from '@/actions/quotati
 export const metadata: Metadata = { title: 'Quotations' }
 export const dynamic = 'force-dynamic'
 
+const PAGE_SIZE = 50
+
 const statusColor: Record<string, string> = {
   PENDING: 'bg-warning/10 text-warning border-warning/20',
   ACCEPTED: 'bg-success/10 text-success border-success/20',
@@ -14,19 +16,30 @@ const statusColor: Record<string, string> = {
   EXPIRED: 'bg-surface-container text-on-surface-variant border-outline-variant/40',
 }
 
-export default async function QuotationsPage() {
-  const quotations = await prisma.quotation.findMany({
-    orderBy: { createdAt: 'desc' },
-    take: 50,
-    include: { items: { include: { product: { select: { name: true } } } } },
-  }).catch(() => [])
+type SearchParams = Promise<{ page?: string }>
+
+export default async function QuotationsPage({ searchParams }: { searchParams: SearchParams }) {
+  const { page: pageParam } = await searchParams
+  const page = Math.max(1, parseInt(pageParam ?? '1') || 1)
+
+  const [quotations, totalCount] = await Promise.all([
+    prisma.quotation.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: PAGE_SIZE,
+      skip: (page - 1) * PAGE_SIZE,
+      include: { items: { include: { product: { select: { name: true } } } } },
+    }).catch(() => []),
+    prisma.quotation.count().catch(() => 0),
+  ])
+
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE)
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-headline text-2xl font-extrabold text-on-surface">Quotations</h1>
-          <p className="text-on-surface-variant text-sm mt-1">Recent {quotations.length} quotations</p>
+          <p className="text-on-surface-variant text-sm mt-1">{totalCount} total quotation{totalCount !== 1 ? 's' : ''}</p>
         </div>
         <div className="flex gap-2">
           <a href="/api/admin/export/quotations" className="flex items-center gap-1.5 border border-outline-variant/60 text-on-surface-variant font-bold px-4 py-2.5 rounded-xl hover:bg-surface-container transition-colors text-sm">
@@ -108,6 +121,31 @@ export default async function QuotationsPage() {
           </table>
         </div>
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between text-sm">
+          <p className="text-on-surface-variant">
+            Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, totalCount)} of {totalCount}
+          </p>
+          <div className="flex gap-1">
+            {page > 1 && (
+              <Link href={`/admin/quotations?page=${page - 1}`} className="px-3 py-2 rounded-xl border border-outline-variant/60 text-on-surface-variant hover:bg-surface-container transition-colors">
+                ← Prev
+              </Link>
+            )}
+            {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => i + 1).map((p) => (
+              <Link key={p} href={`/admin/quotations?page=${p}`} className={`px-3 py-2 rounded-xl border transition-colors ${p === page ? 'bg-primary text-on-primary border-primary' : 'border-outline-variant/60 text-on-surface-variant hover:bg-surface-container'}`}>
+                {p}
+              </Link>
+            ))}
+            {page < totalPages && (
+              <Link href={`/admin/quotations?page=${page + 1}`} className="px-3 py-2 rounded-xl border border-outline-variant/60 text-on-surface-variant hover:bg-surface-container transition-colors">
+                Next →
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
