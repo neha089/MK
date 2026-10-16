@@ -70,6 +70,14 @@ export async function submitEnquiry(_: EnquiryFormState, formData: FormData): Pr
 }
 
 export async function markEnquiryRead(id: string) {
-  await prisma.enquiry.update({ where: { id }, data: { read: true, status: 'READ' } })
+  await prisma.enquiry.update({ where: { id }, data: { read: true, status: 'CONTACTED' } })
+  revalidatePath('/admin/enquiries')
+}
+
+export async function updateEnquiryStatus(id: string, status: string) {
+  await prisma.enquiry.update({
+    where: { id },
+    data: { status, read: status !== 'NEW' },
+  })
   revalidatePath('/admin/enquiries')
 }

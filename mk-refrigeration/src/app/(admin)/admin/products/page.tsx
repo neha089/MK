@@ -8,10 +8,13 @@ import ProductFilters from './_filters'
 export const metadata: Metadata = { title: 'Products' }
 export const dynamic = 'force-dynamic'
 
-type SearchParams = Promise<{ category?: string; brand?: string; stock?: string; q?: string }>
+const PAGE_SIZE = 50
+
+type SearchParams = Promise<{ category?: string; brand?: string; stock?: string; q?: string; page?: string }>
 
 export default async function ProductsPage({ searchParams }: { searchParams: SearchParams }) {
-  const { category, brand, stock, q } = await searchParams
+  const { category, brand, stock, q, page: pageParam } = await searchParams
+  const page = Math.max(1, parseInt(pageParam ?? '1') || 1)
 
   const where = {
     ...(category ? { categoryId: category } : {}),
@@ -26,16 +29,20 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
     } : {}),
   }
 
-  const [products, categories, brands] = await Promise.all([
+  const [products, totalCount, categories, brands] = await Promise.all([
     prisma.product.findMany({
       where,
       include: { brand: true, category: true },
       orderBy: { createdAt: 'desc' },
+      take: PAGE_SIZE,
+      skip: (page - 1) * PAGE_SIZE,
     }).catch(() => []),
+    prisma.product.count({ where }).catch(() => 0),
     prisma.category.findMany({ orderBy: { order: 'asc' } }).catch(() => []),
     prisma.brand.findMany({ orderBy: { name: 'asc' } }).catch(() => []),
   ])
 
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE)
   const activeFilters = [category, brand, stock, q].filter(Boolean).length
 
   return (
@@ -44,7 +51,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
         <div>
           <h1 className="font-headline text-2xl font-extrabold text-on-surface">Products</h1>
           <p className="text-on-surface-variant text-sm mt-1">
-            {products.length} product{products.length !== 1 ? 's' : ''}
+            {totalCount} product{totalCount !== 1 ? 's' : ''}
             {activeFilters > 0 && <span className="text-primary ml-1">(filtered)</span>}
           </p>
         </div>
@@ -136,6 +143,46 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
           </table>
         </div>
       </div>
+
+      {totalPages > 1 && (() => {
+        const buildPageUrl = (p: number) => {
+          const params = new URLSearchParams()
+          if (category) params.set('category', category)
+          if (brand) params.set('brand', brand)
+          if (stock) params.set('stock', stock)
+          if (q) params.set('q', q)
+          if (p > 1) params.set('page', String(p))
+          const s = params.toString()
+          return `/admin/products${s ? `?${s}` : ''}`
+        }
+        return (
+          <div className="flex items-center justify-between text-sm">
+            <p className="text-on-surface-variant">
+              Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, totalCount)} of {totalCount}
+            </p>
+            <div className="flex gap-1">
+              {page > 1 && (
+                <Link href={buildPageUrl(page - 1)} className="px-3 py-2 rounded-xl border border-outline-variant/60 text-on-surface-variant hover:bg-surface-container transition-colors">
+                  ← Prev
+                </Link>
+              )}
+              {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                const p = i + 1
+                return (
+                  <Link key={p} href={buildPageUrl(p)} className={`px-3 py-2 rounded-xl border transition-colors ${p === page ? 'bg-primary text-on-primary border-primary' : 'border-outline-variant/60 text-on-surface-variant hover:bg-surface-container'}`}>
+                    {p}
+                  </Link>
+                )
+              })}
+              {page < totalPages && (
+                <Link href={buildPageUrl(page + 1)} className="px-3 py-2 rounded-xl border border-outline-variant/60 text-on-surface-variant hover:bg-surface-container transition-colors">
+                  Next →
+                </Link>
+              )}
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }

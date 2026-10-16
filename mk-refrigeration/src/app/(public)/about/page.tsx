@@ -1,13 +1,29 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { SHOP, BRANDS, CATEGORIES } from '@/lib/constants'
+import { prisma } from '@/lib/db'
+
+export const revalidate = 3600
 
 export const metadata: Metadata = {
   title: 'About MK Refrigeration | AC & Appliance Dealer Bharuch',
   description: 'Learn about MK Refrigeration — your trusted authorized electronics dealer in Bharuch, Gujarat. AC, Refrigerator, Washing Machine, Deep Freezer dealer.',
 }
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const [brandCount, categoryCount, customerCount] = await Promise.all([
+    prisma.brand.count().catch(() => BRANDS.length),
+    prisma.category.count().catch(() => CATEGORIES.length),
+    prisma.customer.count().catch(() => 0),
+  ])
+
+  const stats = [
+    { num: `${brandCount}+`, label: 'Brands Available', icon: 'verified' },
+    { num: String(categoryCount), label: 'Product Categories', icon: 'category' },
+    { num: customerCount >= 1000 ? `${Math.floor(customerCount / 100) * 100}+` : `${customerCount}+`, label: 'Happy Customers', icon: 'people' },
+    { num: '100%', label: 'Genuine Products', icon: 'workspace_premium' },
+  ]
+
   return (
     <div className="py-16">
       {/* Hero */}
@@ -36,19 +52,14 @@ export default function AboutPage() {
                 <span className="material-symbols-outlined text-lg">call</span>
                 Call Us
               </a>
-              <Link href="/contact" className="flex items-center gap-2 border-2 border-primary/30 text-primary font-bold px-5 py-2.5 rounded-xl text-sm hover:bg-primary/10 transition-colors">
+              <a href={SHOP.mapUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 border-2 border-primary/30 text-primary font-bold px-5 py-2.5 rounded-xl text-sm hover:bg-primary/10 transition-colors">
                 Get Directions
                 <span className="material-symbols-outlined text-lg">map</span>
-              </Link>
+              </a>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            {[
-              { num: '12+', label: 'Brands Available', icon: 'verified' },
-              { num: '6', label: 'Product Categories', icon: 'category' },
-              { num: '1000+', label: 'Happy Customers', icon: 'people' },
-              { num: '100%', label: 'Genuine Products', icon: 'workspace_premium' },
-            ].map((s) => (
+            {stats.map((s) => (
               <div key={s.label} className="bg-white rounded-2xl border border-outline-variant/40 p-6 text-center">
                 <span className="material-symbols-outlined text-3xl text-primary mb-2" style={{ fontVariationSettings: "'FILL' 1" }}>
                   {s.icon}
