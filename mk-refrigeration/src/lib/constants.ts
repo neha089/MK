@@ -15,6 +15,9 @@ export const SHOP = {
   instagram: '',
 }
 
+// GST rate for home appliances (18%). Set 0 if not GST-registered (empty SHOP.gstin).
+export const GST_RATE = 18
+
 export const CATEGORIES = [
   { name: 'Air Conditioners', slug: 'ac', icon: 'ac_unit', description: 'Split, Window & Portable ACs' },
   { name: 'Refrigerators', slug: 'refrigerators', icon: 'kitchen', description: 'Single & Double Door Fridges' },

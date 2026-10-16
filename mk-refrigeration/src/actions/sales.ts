@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { generateInvoiceNo } from '@/lib/utils'
 import { getSession } from '@/lib/session'
+import { SHOP, GST_RATE } from '@/lib/constants'
 
 const SaleItemSchema = z.object({
   productId: z.string(),
@@ -43,7 +44,12 @@ export async function createSale(_: SaleFormState, formData: FormData): Promise<
 
   const subtotal = parsed.data.items.reduce((s, i) => s + i.qty * i.price, 0)
   const discountTotal = parsed.data.items.reduce((s, i) => s + (i.discount ?? 0), 0)
-  const totalAmount = subtotal - discountTotal
+  const netAmount = subtotal - discountTotal
+  // GST applies only when the shop has a valid GSTIN
+  const gstAmount = SHOP.gstin
+    ? Number(((netAmount * GST_RATE) / 100).toFixed(2))
+    : 0
+  const totalAmount = netAmount + gstAmount
 
   try {
     const sale = await prisma.$transaction(async (tx) => {
@@ -66,7 +72,7 @@ export async function createSale(_: SaleFormState, formData: FormData): Promise<
           customerPhone: parsed.data.customerPhone ?? null,
           subtotal,
           discount: discountTotal,
-          gstAmount: 0,
+          gstAmount,
           totalAmount,
           notes: parsed.data.notes ?? null,
           items: {
@@ -104,5 +110,49 @@ export async function createSale(_: SaleFormState, formData: FormData): Promise<
     return { saleId: sale.id }
   } catch (e: unknown) {
     return { error: e instanceof Error ? e.message : 'Failed to create sale' }
+  }
+}
+
+export type CancelSaleState = { error?: string; success?: boolean } | undefined
+
+export async function cancelSale(id: string): Promise<CancelSaleState> {
+  const session = await getSession()
+  if (!session) return { error: 'Unauthorized' }
+  if (session.role !== 'ADMIN') return { error: 'Only admins can cancel sales' }
+
+  try {
+    const sale = await prisma.sale.findUnique({
+      where: { id },
+      include: { items: { select: { productId: true, qty: true } } },
+    })
+    if (!sale) return { error: 'Sale not found' }
+    if (sale.status === 'CANCELLED') return { error: 'Sale is already cancelled' }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.sale.update({ where: { id }, data: { status: 'CANCELLED' } })
+      // Restore stock for each item
+      for (const item of sale.items) {
+        await tx.product.update({
+          where: { id: item.productId },
+          data: { stockQty: { increment: item.qty } },
+        })
+        await tx.inventoryLog.create({
+          data: {
+            productId: item.productId,
+            type: 'IN',
+            qty: item.qty,
+            refId: id,
+            note: `Cancelled: ${sale.invoiceNo}`,
+          },
+        })
+      }
+    })
+
+    revalidatePath('/admin/sales')
+    revalidatePath(`/admin/sales/${id}`)
+    revalidatePath('/admin/inventory')
+    return { success: true }
+  } catch (e: unknown) {
+    return { error: e instanceof Error ? e.message : 'Failed to cancel sale' }
   }
 }

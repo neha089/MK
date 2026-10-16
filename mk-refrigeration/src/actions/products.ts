@@ -103,6 +103,19 @@ export async function updateProduct(id: string, _: ProductFormState, formData: F
 export async function deleteProduct(id: string) {
   const session = await getSession()
   if (!session) return
+
+  const [saleCount, purchaseCount] = await Promise.all([
+    prisma.saleItem.count({ where: { productId: id } }),
+    prisma.purchaseItem.count({ where: { productId: id } }),
+  ])
+
+  if (saleCount > 0 || purchaseCount > 0) {
+    throw new Error(
+      `Cannot delete: this product appears in ${saleCount} sale(s) and ${purchaseCount} purchase(s). ` +
+      `Mark it as "Out of Stock" instead.`
+    )
+  }
+
   await prisma.product.delete({ where: { id } })
   revalidatePath('/admin/products')
 }

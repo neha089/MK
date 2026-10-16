@@ -163,10 +163,16 @@ export default function PrintInvoice({ sale }: { sale: Sale }) {
                   </tr>
                 )}
                 {sale.gstAmount > 0 && (
-                  <tr>
-                    <td style={{ padding: '5px 0', fontSize: 13, color: '#555' }}>GST</td>
-                    <td style={{ padding: '5px 0', textAlign: 'right', fontSize: 13 }}>{fmt(sale.gstAmount)}</td>
-                  </tr>
+                  <>
+                    <tr>
+                      <td style={{ padding: '5px 0', fontSize: 13, color: '#555' }}>CGST (9%)</td>
+                      <td style={{ padding: '5px 0', textAlign: 'right', fontSize: 13 }}>{fmt(sale.gstAmount / 2)}</td>
+                    </tr>
+                    <tr>
+                      <td style={{ padding: '5px 0', fontSize: 13, color: '#555' }}>SGST (9%)</td>
+                      <td style={{ padding: '5px 0', textAlign: 'right', fontSize: 13 }}>{fmt(sale.gstAmount / 2)}</td>
+                    </tr>
+                  </>
                 )}
                 <tr>
                   <td colSpan={2} style={{ paddingTop: 8 }}>

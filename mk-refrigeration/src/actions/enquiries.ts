@@ -73,11 +73,11 @@ export async function submitEnquiry(_: EnquiryFormState, formData: FormData): Pr
 export async function markEnquiryRead(id: string) {
   const session = await getSession()
   if (!session) return
-  await prisma.enquiry.update({ where: { id }, data: { read: true, status: 'CONTACTED' } })
+  await prisma.enquiry.update({ where: { id }, data: { read: true, status: 'CONTACTED' as const } })
   revalidatePath('/admin/enquiries')
 }
 
-export async function updateEnquiryStatus(id: string, status: string) {
+export async function updateEnquiryStatus(id: string, status: 'NEW' | 'CONTACTED' | 'CONVERTED' | 'CLOSED') {
   const session = await getSession()
   if (!session) return
   await prisma.enquiry.update({

@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { formatPrice } from '@/lib/utils'
+import { getSession } from '@/lib/session'
+import CancelSaleButton from './_cancel'
 
 export const metadata: Metadata = { title: 'Sale Detail' }
 export const dynamic = 'force-dynamic'
@@ -16,6 +18,7 @@ const paymentBadge: Record<string, string> = {
 
 export default async function SaleDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+  const session = await getSession()
 
   const sale = await prisma.sale.findUnique({
     where: { id },
@@ -52,14 +55,24 @@ export default async function SaleDetailPage({ params }: { params: Promise<{ id:
               {' · '}by {sale.createdBy.name}
             </p>
           </div>
-          <Link
-            href={`/admin/sales/${sale.id}/invoice`}
-            target="_blank"
-            className="flex items-center gap-1.5 shrink-0 bg-primary text-on-primary font-bold px-4 py-2.5 rounded-xl hover:bg-primary/90 transition-colors text-sm"
-          >
-            <span className="material-symbols-outlined text-base">print</span>
-            Print Invoice
-          </Link>
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+            {sale.status === 'CANCELLED' && (
+              <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-error/10 text-error border border-error/20">
+                CANCELLED
+              </span>
+            )}
+            {sale.status === 'COMPLETED' && session?.role === 'ADMIN' && (
+              <CancelSaleButton saleId={sale.id} />
+            )}
+            <Link
+              href={`/admin/sales/${sale.id}/invoice`}
+              target="_blank"
+              className="flex items-center gap-1.5 shrink-0 bg-primary text-on-primary font-bold px-4 py-2.5 rounded-xl hover:bg-primary/90 transition-colors text-sm"
+            >
+              <span className="material-symbols-outlined text-base">print</span>
+              Print Invoice
+            </Link>
+          </div>
         </div>
       </div>
 

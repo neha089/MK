@@ -5,7 +5,7 @@ import { updateEnquiryStatus } from '@/actions/enquiries'
 export const metadata: Metadata = { title: 'Enquiries' }
 export const dynamic = 'force-dynamic'
 
-const STATUSES = [
+const STATUSES: { value: 'NEW' | 'CONTACTED' | 'CONVERTED' | 'CLOSED'; label: string; color: string }[] = [
   { value: 'NEW', label: 'New', color: 'bg-primary text-on-primary' },
   { value: 'CONTACTED', label: 'Contacted', color: 'bg-blue-100 text-blue-700' },
   { value: 'CONVERTED', label: 'Converted', color: 'bg-emerald-100 text-emerald-700' },
