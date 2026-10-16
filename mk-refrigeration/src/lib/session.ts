@@ -1,10 +1,11 @@
 import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 
-if (!process.env.NEXTAUTH_SECRET) {
-  throw new Error('NEXTAUTH_SECRET environment variable is not set')
+const secret = process.env.SESSION_SECRET ?? process.env.NEXTAUTH_SECRET
+if (!secret) {
+  throw new Error('SESSION_SECRET environment variable is not set')
 }
-const key = new TextEncoder().encode(process.env.NEXTAUTH_SECRET)
+const key = new TextEncoder().encode(secret)
 
 export type SessionPayload = {
   userId: string
@@ -41,7 +42,7 @@ export async function createSession(payload: SessionPayload) {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     expires: expiresAt,
-    sameSite: 'lax',
+    sameSite: 'strict',
     path: '/',
   })
 }

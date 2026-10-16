@@ -24,11 +24,16 @@ export type AuditAction =
 export async function getClientIp(): Promise<string> {
   try {
     const h = await headers()
-    return (
-      h.get('x-forwarded-for')?.split(',')[0].trim() ??
-      h.get('x-real-ip') ??
-      'unknown'
-    )
+    // Vercel sets x-vercel-forwarded-for from the edge; cannot be spoofed by clients
+    const vercelIp = h.get('x-vercel-forwarded-for')
+    if (vercelIp) return vercelIp.split(',')[0].trim()
+    // Fallback: last entry in x-forwarded-for is added by the nearest trusted proxy
+    const forwarded = h.get('x-forwarded-for')
+    if (forwarded) {
+      const parts = forwarded.split(',')
+      return parts[parts.length - 1].trim()
+    }
+    return h.get('x-real-ip') ?? 'unknown'
   } catch {
     return 'unknown'
   }

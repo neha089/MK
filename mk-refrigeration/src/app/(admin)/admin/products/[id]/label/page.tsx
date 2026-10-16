@@ -2,6 +2,10 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { SHOP } from '@/lib/constants'
 import { formatPrice } from '@/lib/utils'
+import { Libre_Barcode_128_Text } from 'next/font/google'
+import LabelToolbar from './_toolbar'
+
+const barcodeFont = Libre_Barcode_128_Text({ weight: '400', subsets: ['latin'], variable: '--font-barcode' })
 
 type Props = { params: Promise<{ id: string }> }
 
@@ -19,10 +23,8 @@ export default async function LabelPage({ params }: Props) {
   const copies = 12
 
   return (
-    <>
+    <div className={barcodeFont.variable}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Libre+Barcode+128+Text&display=swap');
-
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body { background: #f5f5f5; font-family: Arial, sans-serif; }
@@ -114,7 +116,7 @@ export default async function LabelPage({ params }: Props) {
         }
 
         .label-barcode {
-          font-family: 'Libre Barcode 128 Text', monospace;
+          font-family: var(--font-barcode), monospace;
           font-size: 22px;
           color: #111827;
           line-height: 1;
@@ -142,17 +144,7 @@ export default async function LabelPage({ params }: Props) {
         }
       `}</style>
 
-      <div className="toolbar">
-        <a href={`/admin/products/${id}`} className="btn btn-secondary">
-          ← Back
-        </a>
-        <button onClick={() => window.print()} className="btn btn-primary">
-          🖨 Print Labels
-        </button>
-        <span style={{ fontSize: '13px', color: '#6b7280' }}>
-          {copies} labels per sheet · {product.name}
-        </span>
-      </div>
+      <LabelToolbar productId={id} productName={product.name} copies={copies} />
 
       <div className="sheet">
         <div className="labels-grid">
@@ -174,12 +166,6 @@ export default async function LabelPage({ params }: Props) {
           ))}
         </div>
       </div>
-
-      <script dangerouslySetInnerHTML={{ __html: `
-        document.querySelector('.btn-primary').addEventListener('click', function() {
-          window.print();
-        });
-      `}} />
-    </>
+    </div>
   )
 }

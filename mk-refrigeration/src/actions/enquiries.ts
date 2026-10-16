@@ -62,7 +62,7 @@ export async function submitEnquiry(_: EnquiryFormState, formData: FormData): Pr
       },
     })
     void notifyOwner(parsed.data.name, parsed.data.phone, parsed.data.product, parsed.data.message)
-    void logAudit({ action: 'ENQUIRY_SUBMIT', ip, meta: parsed.data.name })
+    await logAudit({ action: 'ENQUIRY_SUBMIT', ip, meta: parsed.data.name })
     revalidatePath('/admin/enquiries')
     return { success: true }
   } catch (e: unknown) {

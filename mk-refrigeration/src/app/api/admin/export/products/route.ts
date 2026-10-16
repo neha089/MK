@@ -19,6 +19,7 @@ export async function GET() {
   const cookieStore = await cookies()
   const session = await decrypt(cookieStore.get('session')?.value)
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (session.role !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const products = await prisma.product.findMany({
     orderBy: { name: 'asc' },
