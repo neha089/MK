@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
@@ -55,7 +56,7 @@ export default async function BrandDetailPage({ params }: Props) {
         {/* Brand header */}
         <div className="flex items-center gap-6 mb-10">
           {brand.logo ? (
-            <img src={brand.logo} alt={brand.name} className="h-16 object-contain" />
+            <Image src={brand.logo} alt={brand.name} width={128} height={64} className="h-16 w-auto object-contain" />
           ) : (
             <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center shrink-0">
               <span className="material-symbols-outlined text-3xl text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
@@ -92,7 +93,7 @@ export default async function BrandDetailPage({ params }: Props) {
                 >
                   <div className="aspect-square bg-surface-container flex items-center justify-center relative overflow-hidden">
                     {p.images?.[0] ? (
-                      <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      <Image src={p.images[0]} alt={p.name} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover group-hover:scale-105 transition-transform duration-300" />
                     ) : (
                       <span className="material-symbols-outlined text-5xl text-on-surface-variant/30" style={{ fontVariationSettings: "'FILL' 1" }}>ac_unit</span>
                     )}

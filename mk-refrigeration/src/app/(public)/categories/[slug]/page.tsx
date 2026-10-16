@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
@@ -96,8 +97,7 @@ export default async function CategoryPage({ params }: Props) {
               >
                 <div className="relative aspect-[4/3] bg-surface-container-low flex items-center justify-center">
                   {p.images?.[0] ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={p.images?.[0]} alt={p.name} className="object-contain w-full h-full p-4 group-hover:scale-105 transition-transform" />
+                    <Image src={p.images[0]} alt={p.name} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-contain p-4 group-hover:scale-105 transition-transform" />
                   ) : (
                     <span className="material-symbols-outlined text-6xl text-primary/20" style={{ fontVariationSettings: "'FILL' 1" }}>
                       {icon}

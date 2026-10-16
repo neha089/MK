@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
 import { prisma } from '@/lib/db'
 import { SHOP } from '@/lib/constants'
@@ -51,7 +52,7 @@ export default async function BrandsPage() {
                   className="group bg-white rounded-3xl border-2 border-primary/20 p-6 flex flex-col items-center text-center hover:border-primary hover:shadow-lg transition-all duration-300"
                 >
                   {brand.logo ? (
-                    <img src={brand.logo} alt={brand.name} className="h-12 object-contain mb-3 group-hover:scale-105 transition-transform" />
+                    <Image src={brand.logo} alt={brand.name} width={120} height={48} className="h-12 w-auto object-contain mb-3 group-hover:scale-105 transition-transform" />
                   ) : (
                     <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
                       <span className="material-symbols-outlined text-2xl text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
@@ -80,7 +81,7 @@ export default async function BrandsPage() {
                   className="group bg-white rounded-2xl border border-outline-variant/40 p-5 flex flex-col items-center text-center hover:border-primary/40 hover:shadow-md transition-all duration-300"
                 >
                   {brand.logo ? (
-                    <img src={brand.logo} alt={brand.name} className="h-10 object-contain mb-2 group-hover:scale-105 transition-transform" />
+                    <Image src={brand.logo} alt={brand.name} width={100} height={40} className="h-10 w-auto object-contain mb-2 group-hover:scale-105 transition-transform" />
                   ) : (
                     <div className="w-10 h-10 bg-surface-container rounded-xl flex items-center justify-center mb-2 group-hover:bg-primary/10 transition-colors">
                       <span className="material-symbols-outlined text-xl text-on-surface-variant group-hover:text-primary transition-colors">verified</span>
