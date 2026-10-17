@@ -6,6 +6,8 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { generateInvoiceNo } from '@/lib/utils'
 import { getSession } from '@/lib/session'
+import { SHOP, GST_RATE } from '@/lib/constants'
+import { logAudit, getClientIp } from '@/lib/audit'
 
 const ItemSchema = z.object({
   productId: z.string(),
@@ -71,11 +73,104 @@ export async function createQuotation(_: QuotationFormState, formData: FormData)
       },
     })
 
+    const ip = await getClientIp()
+    await logAudit({
+      action: 'CREATE_QUOTATION',
+      userId: session.userId,
+      userEmail: session.email,
+      entity: 'Quotation',
+      entityId: quotation.id,
+      meta: quotation.quoteNo,
+      ip,
+    })
+
     revalidatePath('/admin/quotations')
     return { quotationId: quotation.id }
   } catch (e: unknown) {
     return { error: e instanceof Error ? e.message : 'Failed to create quotation' }
   }
+}
+
+const UpdateQuotationSchema = z.object({
+  customerName: z.string().min(1),
+  customerPhone: z.string().optional(),
+  validDays: z.coerce.number().int().min(1).default(7),
+  notes: z.string().optional(),
+  items: z.array(ItemSchema).min(1),
+})
+
+export type UpdateQuotationFormState = { error?: string; success?: boolean } | undefined
+
+export async function updateQuotation(id: string, _: UpdateQuotationFormState, formData: FormData): Promise<UpdateQuotationFormState> {
+  const session = await getSession()
+  if (!session) return { error: 'Unauthorized' }
+
+  let items: z.infer<typeof ItemSchema>[] = []
+  try {
+    items = JSON.parse(formData.get('items') as string)
+  } catch {
+    return { error: 'Invalid items data' }
+  }
+
+  const parsed = UpdateQuotationSchema.safeParse({
+    customerName: formData.get('customerName'),
+    customerPhone: formData.get('customerPhone') || undefined,
+    validDays: formData.get('validDays') || 7,
+    notes: formData.get('notes') || undefined,
+    items,
+  })
+  if (!parsed.success) return { error: parsed.error.issues[0].message }
+
+  const subtotal = parsed.data.items.reduce((s, i) => s + i.qty * i.price, 0)
+  const discountTotal = parsed.data.items.reduce((s, i) => s + (i.discount ?? 0), 0)
+  const totalAmount = subtotal - discountTotal
+
+  try {
+    const quotation = await prisma.quotation.findUnique({ where: { id }, select: { status: true, quoteNo: true } })
+    if (!quotation) return { error: 'Quotation not found' }
+    if (quotation.status !== 'PENDING') return { error: 'Only pending quotations can be edited' }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.quotationItem.deleteMany({ where: { quotationId: id } })
+      await tx.quotation.update({
+        where: { id },
+        data: {
+          customerName: parsed.data.customerName,
+          customerPhone: parsed.data.customerPhone ?? null,
+          validDays: parsed.data.validDays,
+          subtotal,
+          discount: discountTotal,
+          totalAmount,
+          notes: parsed.data.notes ?? null,
+          items: {
+            create: parsed.data.items.map((item) => ({
+              productId: item.productId,
+              qty: item.qty,
+              price: item.price,
+              discount: item.discount ?? 0,
+            })),
+          },
+        },
+      })
+    })
+
+    const ip = await getClientIp()
+    await logAudit({
+      action: 'UPDATE_QUOTATION',
+      userId: session.userId,
+      userEmail: session.email,
+      entity: 'Quotation',
+      entityId: id,
+      meta: quotation.quoteNo,
+      ip,
+    })
+  } catch (e: unknown) {
+    return { error: e instanceof Error ? e.message : 'Failed to update quotation' }
+  }
+
+  revalidatePath(`/admin/quotations/${id}`)
+  revalidatePath('/admin/quotations')
+  redirect(`/admin/quotations/${id}`)
 }
 
 export async function updateQuotationStatus(id: string, status: 'ACCEPTED' | 'REJECTED' | 'EXPIRED') {
@@ -95,6 +190,12 @@ export async function convertQuotationToSale(quotationId: string): Promise<void>
 
   let saleId: string
   try {
+    const netAmount = Number(quotation.subtotal) - Number(quotation.discount)
+    const gstAmount = SHOP.gstin
+      ? Number(((netAmount * GST_RATE) / 100).toFixed(2))
+      : 0
+    const totalAmount = netAmount + gstAmount
+
     const sale = await prisma.$transaction(async (tx) => {
       const newSale = await tx.sale.create({
         data: {
@@ -104,8 +205,8 @@ export async function convertQuotationToSale(quotationId: string): Promise<void>
           customerPhone: quotation.customerPhone,
           subtotal: Number(quotation.subtotal),
           discount: Number(quotation.discount),
-          gstAmount: 0,
-          totalAmount: Number(quotation.totalAmount),
+          gstAmount,
+          totalAmount,
           notes: quotation.notes,
           items: {
             create: quotation.items.map((item) => ({
@@ -142,6 +243,17 @@ export async function convertQuotationToSale(quotationId: string): Promise<void>
       return newSale
     })
     saleId = sale.id
+
+    const ip = await getClientIp()
+    await logAudit({
+      action: 'CONVERT_QUOTATION',
+      userId: session.userId,
+      userEmail: session.email,
+      entity: 'Quotation',
+      entityId: quotationId,
+      meta: `${quotation.quoteNo} → ${sale.invoiceNo}`,
+      ip,
+    })
   } catch {
     return
   }

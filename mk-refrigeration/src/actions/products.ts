@@ -6,6 +6,7 @@ import { prisma } from '@/lib/db'
 import { slugify } from '@/lib/utils'
 import { revalidatePath } from 'next/cache'
 import { getSession } from '@/lib/session'
+import { logAudit, getClientIp } from '@/lib/audit'
 
 const ProductSchema = z.object({
   name: z.string().min(2),
@@ -53,7 +54,7 @@ export async function createProduct(_: ProductFormState, formData: FormData): Pr
   const images = parseImages(formData)
 
   try {
-    await prisma.product.create({
+    const product = await prisma.product.create({
       data: {
         name,
         slug,
@@ -61,6 +62,17 @@ export async function createProduct(_: ProductFormState, formData: FormData): Pr
         images,
         mrp: rest.mrp ?? null,
       },
+    })
+
+    const ip = await getClientIp()
+    await logAudit({
+      action: 'CREATE_PRODUCT',
+      userId: session.userId,
+      userEmail: session.email,
+      entity: 'Product',
+      entityId: product.id,
+      meta: name,
+      ip,
     })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'Failed to create product'
@@ -92,6 +104,17 @@ export async function updateProduct(id: string, _: ProductFormState, formData: F
       where: { id },
       data: { ...parsed.data, images, mrp: parsed.data.mrp ?? null },
     })
+
+    const ip = await getClientIp()
+    await logAudit({
+      action: 'UPDATE_PRODUCT',
+      userId: session.userId,
+      userEmail: session.email,
+      entity: 'Product',
+      entityId: id,
+      meta: parsed.data.name,
+      ip,
+    })
   } catch (e: unknown) {
     return { error: e instanceof Error ? e.message : 'Update failed' }
   }
@@ -117,6 +140,17 @@ export async function deleteProduct(id: string) {
   }
 
   await prisma.product.delete({ where: { id } })
+
+  const ip = await getClientIp()
+  await logAudit({
+    action: 'DELETE_PRODUCT',
+    userId: session.userId,
+    userEmail: session.email,
+    entity: 'Product',
+    entityId: id,
+    ip,
+  })
+
   revalidatePath('/admin/products')
 }
 

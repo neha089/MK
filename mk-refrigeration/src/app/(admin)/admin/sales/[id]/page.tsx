@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db'
 import { formatPrice } from '@/lib/utils'
 import { getSession } from '@/lib/session'
 import CancelSaleButton from './_cancel'
+import ReturnSaleButton from './_return'
 
 export const metadata: Metadata = { title: 'Sale Detail' }
 export const dynamic = 'force-dynamic'
@@ -61,8 +62,16 @@ export default async function SaleDetailPage({ params }: { params: Promise<{ id:
                 CANCELLED
               </span>
             )}
+            {sale.status === 'RETURNED' && (
+              <span className="text-xs font-bold px-3 py-1.5 rounded-full bg-warning/10 text-warning border border-warning/20">
+                RETURNED
+              </span>
+            )}
             {sale.status === 'COMPLETED' && session?.role === 'ADMIN' && (
-              <CancelSaleButton saleId={sale.id} />
+              <>
+                <ReturnSaleButton saleId={sale.id} />
+                <CancelSaleButton saleId={sale.id} />
+              </>
             )}
             <Link
               href={`/admin/sales/${sale.id}/invoice`}

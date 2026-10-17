@@ -62,14 +62,25 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
               {isExpired && quote.status === 'PENDING' && <span className="text-error ml-1">(expired)</span>}
             </p>
           </div>
-          <Link
-            href={`/admin/quotations/${quote.id}/pdf`}
-            target="_blank"
-            className="flex items-center gap-1.5 shrink-0 border border-outline-variant/60 text-on-surface-variant font-bold px-4 py-2.5 rounded-xl hover:bg-surface-container transition-colors text-sm"
-          >
-            <span className="material-symbols-outlined text-base">picture_as_pdf</span>
-            PDF
-          </Link>
+          <div className="flex items-center gap-2">
+            {quote.status === 'PENDING' && (
+              <Link
+                href={`/admin/quotations/${quote.id}/edit`}
+                className="flex items-center gap-1.5 shrink-0 border border-primary/40 text-primary font-bold px-4 py-2.5 rounded-xl hover:bg-primary/10 transition-colors text-sm"
+              >
+                <span className="material-symbols-outlined text-base">edit</span>
+                Edit
+              </Link>
+            )}
+            <Link
+              href={`/admin/quotations/${quote.id}/pdf`}
+              target="_blank"
+              className="flex items-center gap-1.5 shrink-0 border border-outline-variant/60 text-on-surface-variant font-bold px-4 py-2.5 rounded-xl hover:bg-surface-container transition-colors text-sm"
+            >
+              <span className="material-symbols-outlined text-base">picture_as_pdf</span>
+              PDF
+            </Link>
+          </div>
         </div>
       </div>
 

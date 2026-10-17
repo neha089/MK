@@ -6,6 +6,7 @@ import { prisma } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { generateInvoiceNo } from '@/lib/utils'
 import { getSession } from '@/lib/session'
+import { logAudit, getClientIp } from '@/lib/audit'
 
 const PurchaseItemSchema = z.object({
   productId: z.string(),
@@ -42,9 +43,10 @@ export async function createPurchase(_: PurchaseFormState, formData: FormData): 
 
   const totalAmount = parsed.data.items.reduce((s, i) => s + i.qty * i.costPrice, 0)
 
+  let purchaseId: string
   try {
-    await prisma.$transaction(async (tx) => {
-      const purchase = await tx.purchase.create({
+    const purchase = await prisma.$transaction(async (tx) => {
+      const p = await tx.purchase.create({
         data: {
           invoiceNo: generateInvoiceNo('PUR'),
           userId: session.userId,
@@ -71,11 +73,25 @@ export async function createPurchase(_: PurchaseFormState, formData: FormData): 
             productId: item.productId,
             type: 'IN',
             qty: item.qty,
-            refId: purchase.id,
-            note: `Purchase: ${purchase.invoiceNo}`,
+            refId: p.id,
+            note: `Purchase: ${p.invoiceNo}`,
           },
         })
       }
+
+      return p
+    })
+    purchaseId = purchase.id
+
+    const ip = await getClientIp()
+    await logAudit({
+      action: 'CREATE_PURCHASE',
+      userId: session.userId,
+      userEmail: session.email,
+      entity: 'Purchase',
+      entityId: purchaseId,
+      meta: purchase.invoiceNo ?? undefined,
+      ip,
     })
   } catch (e: unknown) {
     return { error: e instanceof Error ? e.message : 'Failed to create purchase' }
@@ -84,4 +100,51 @@ export async function createPurchase(_: PurchaseFormState, formData: FormData): 
   revalidatePath('/admin/purchases')
   revalidatePath('/admin/inventory')
   redirect('/admin/purchases')
+}
+
+const UpdatePurchaseSchema = z.object({
+  supplierId: z.string().optional(),
+  notes: z.string().optional(),
+  purchaseDate: z.string().optional(),
+})
+
+export type UpdatePurchaseState = { error?: string; success?: boolean } | undefined
+
+export async function updatePurchase(id: string, _: UpdatePurchaseState, formData: FormData): Promise<UpdatePurchaseState> {
+  const session = await getSession()
+  if (!session) return { error: 'Unauthorized' }
+
+  const parsed = UpdatePurchaseSchema.safeParse({
+    supplierId: formData.get('supplierId') || undefined,
+    notes: formData.get('notes') || undefined,
+    purchaseDate: formData.get('purchaseDate') || undefined,
+  })
+  if (!parsed.success) return { error: parsed.error.issues[0].message }
+
+  try {
+    await prisma.purchase.update({
+      where: { id },
+      data: {
+        supplierId: parsed.data.supplierId ?? null,
+        notes: parsed.data.notes ?? null,
+        purchaseDate: parsed.data.purchaseDate ? new Date(parsed.data.purchaseDate) : undefined,
+      },
+    })
+
+    const ip = await getClientIp()
+    await logAudit({
+      action: 'UPDATE_PURCHASE',
+      userId: session.userId,
+      userEmail: session.email,
+      entity: 'Purchase',
+      entityId: id,
+      ip,
+    })
+  } catch (e: unknown) {
+    return { error: e instanceof Error ? e.message : 'Failed to update purchase' }
+  }
+
+  revalidatePath(`/admin/purchases/${id}`)
+  revalidatePath('/admin/purchases')
+  return { success: true }
 }

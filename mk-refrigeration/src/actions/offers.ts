@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { getSession } from '@/lib/session'
+import { logAudit, getClientIp } from '@/lib/audit'
 
 const OfferSchema = z.object({
   title: z.string().min(2),
@@ -57,7 +58,7 @@ export async function createOffer(_: OfferFormState, formData: FormData): Promis
   })
   if (!parsed.success) return { error: parsed.error.issues[0].message }
 
-  await prisma.offer.create({
+  const offer = await prisma.offer.create({
     data: {
       title: parsed.data.title,
       description: parsed.data.description || null,
@@ -66,6 +67,17 @@ export async function createOffer(_: OfferFormState, formData: FormData): Promis
       validUntil: parsed.data.validUntil ? new Date(parsed.data.validUntil) : null,
       active: true,
     },
+  })
+
+  const ip = await getClientIp()
+  await logAudit({
+    action: 'CREATE_OFFER',
+    userId: session.userId,
+    userEmail: session.email,
+    entity: 'Offer',
+    entityId: offer.id,
+    meta: parsed.data.title,
+    ip,
   })
 
   revalidatePath('/admin/offers')

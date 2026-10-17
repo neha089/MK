@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { getSession } from '@/lib/session'
+import { logAudit, getClientIp } from '@/lib/audit'
 
 const StaffSchema = z.object({
   name: z.string().min(2),
@@ -31,8 +32,19 @@ export async function createStaff(_: StaffFormState, formData: FormData): Promis
   if (existing) return { error: 'Email already exists' }
 
   const passwordHash = await bcrypt.hash(parsed.data.password, 10)
-  await prisma.user.create({
+  const user = await prisma.user.create({
     data: { name: parsed.data.name, email: parsed.data.email, password: passwordHash, role: parsed.data.role },
+  })
+
+  const ip = await getClientIp()
+  await logAudit({
+    action: 'CREATE_STAFF',
+    userId: session.userId,
+    userEmail: session.email,
+    entity: 'User',
+    entityId: user.id,
+    meta: parsed.data.email,
+    ip,
   })
 
   revalidatePath('/admin/staff')
@@ -76,6 +88,20 @@ export async function updateStaff(id: string, _: UpdateStaffFormState, formData:
 export async function deleteStaff(id: string) {
   const session = await getSession()
   if (!session || session.role !== 'ADMIN') return
+
+  const user = await prisma.user.findUnique({ where: { id }, select: { email: true } })
   await prisma.user.delete({ where: { id } })
+
+  const ip = await getClientIp()
+  await logAudit({
+    action: 'DELETE_STAFF',
+    userId: session.userId,
+    userEmail: session.email,
+    entity: 'User',
+    entityId: id,
+    meta: user?.email,
+    ip,
+  })
+
   revalidatePath('/admin/staff')
 }

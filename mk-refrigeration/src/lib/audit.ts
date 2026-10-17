@@ -12,14 +12,19 @@ export type AuditAction =
   | 'UPDATE_PRODUCT'
   | 'DELETE_PRODUCT'
   | 'CREATE_SALE'
+  | 'CANCEL_SALE'
+  | 'RETURN_SALE'
   | 'CREATE_PURCHASE'
+  | 'UPDATE_PURCHASE'
   | 'CREATE_QUOTATION'
+  | 'UPDATE_QUOTATION'
   | 'CONVERT_QUOTATION'
   | 'ADJUST_STOCK'
   | 'CREATE_STAFF'
   | 'DELETE_STAFF'
   | 'CREATE_OFFER'
   | 'DELETE_OFFER'
+  | 'DELETE_CUSTOMER'
 
 export async function getClientIp(): Promise<string> {
   try {

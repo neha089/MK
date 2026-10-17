@@ -66,6 +66,17 @@ export default function BillingForm({ products, mode, action, pending, error }: 
             <input name="customerPhone" type="tel" placeholder="98XXXXXXXX" className="input-field" />
           </div>
         </div>
+        {mode === 'sale' && (
+          <div>
+            <label className="label-xs">Payment Mode</label>
+            <select name="paymentMode" className="input-field">
+              <option value="CASH">Cash</option>
+              <option value="CARD">Card</option>
+              <option value="UPI">UPI</option>
+              <option value="CREDIT">Credit</option>
+            </select>
+          </div>
+        )}
         {mode === 'quotation' && (
           <div>
             <label className="label-xs">Valid for (days)</label>

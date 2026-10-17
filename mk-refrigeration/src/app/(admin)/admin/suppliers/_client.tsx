@@ -127,7 +127,9 @@ export default function SuppliersClient({ suppliers }: { suppliers: Supplier[] }
                 </tr>
               ) : suppliers.map((s) => (
                 <tr key={s.id} className="hover:bg-surface-container/50 transition-colors">
-                  <td className="px-5 py-3.5 font-bold text-on-surface">{s.name}</td>
+                  <td className="px-5 py-3.5 font-bold text-on-surface">
+                    <Link href={`/admin/suppliers/${s.id}`} className="hover:text-primary transition-colors">{s.name}</Link>
+                  </td>
                   <td className="px-4 py-3.5 text-on-surface-variant">
                     {s.phone ? (
                       <a href={`tel:${s.phone}`} className="hover:text-primary transition-colors">{s.phone}</a>

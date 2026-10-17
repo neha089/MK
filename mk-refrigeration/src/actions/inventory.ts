@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { getSession } from '@/lib/session'
+import { logAudit, getClientIp } from '@/lib/audit'
 
 const AdjustSchema = z.object({
   productId: z.string().min(1),
@@ -44,6 +45,17 @@ export async function adjustStock(_: AdjustState, formData: FormData): Promise<A
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Adjustment failed' }
   }
+
+  const ip = await getClientIp()
+  await logAudit({
+    action: 'ADJUST_STOCK',
+    userId: session.userId,
+    userEmail: session.email,
+    entity: 'Product',
+    entityId: productId,
+    meta: `${type} ${qty}${note ? ` — ${note}` : ''}`,
+    ip,
+  })
 
   revalidatePath('/admin/inventory')
   return { success: true }

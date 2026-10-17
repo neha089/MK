@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/session'
+import { logAudit, getClientIp } from '@/lib/audit'
 
 const CustomerSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -63,4 +64,26 @@ export async function updateCustomer(id: string, _: CustomerFormState, formData:
   revalidatePath(`/admin/customers/${id}`)
   revalidatePath('/admin/customers')
   return { success: true }
+}
+
+export async function deleteCustomer(id: string) {
+  const session = await getSession()
+  if (!session || session.role !== 'ADMIN') return
+
+  const customer = await prisma.customer.findUnique({ where: { id }, select: { name: true } })
+  await prisma.customer.delete({ where: { id } })
+
+  const ip = await getClientIp()
+  await logAudit({
+    action: 'DELETE_CUSTOMER',
+    userId: session.userId,
+    userEmail: session.email,
+    entity: 'Customer',
+    entityId: id,
+    meta: customer?.name,
+    ip,
+  })
+
+  revalidatePath('/admin/customers')
+  redirect('/admin/customers')
 }

@@ -4,7 +4,9 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { formatPrice } from '@/lib/utils'
 import { updateCustomer } from '@/actions/customers'
+import { getSession } from '@/lib/session'
 import CustomerEditForm from './_client'
+import DeleteCustomerButton from './_delete'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,6 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function CustomerDetailPage({ params }: Props) {
   const { id } = await params
+  const session = await getSession()
 
   const customer = await prisma.customer.findUnique({
     where: { id },
@@ -50,27 +53,32 @@ export default async function CustomerDetailPage({ params }: Props) {
       </nav>
 
       {/* Header */}
-      <div className="flex items-start gap-4">
-        <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-          <span className="material-symbols-outlined text-2xl text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>person</span>
-        </div>
-        <div>
-          <h1 className="font-headline text-2xl font-extrabold text-on-surface">{customer.name}</h1>
-          <div className="flex flex-wrap items-center gap-3 mt-1">
-            {customer.phone && (
-              <a href={`tel:${customer.phone}`} className="text-sm text-primary font-medium hover:underline flex items-center gap-1">
-                <span className="material-symbols-outlined text-sm">call</span>
-                {customer.phone}
-              </a>
-            )}
-            {customer.email && (
-              <a href={`mailto:${customer.email}`} className="text-sm text-on-surface-variant hover:text-primary flex items-center gap-1">
-                <span className="material-symbols-outlined text-sm">mail</span>
-                {customer.email}
-              </a>
-            )}
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <span className="material-symbols-outlined text-2xl text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>person</span>
+          </div>
+          <div>
+            <h1 className="font-headline text-2xl font-extrabold text-on-surface">{customer.name}</h1>
+            <div className="flex flex-wrap items-center gap-3 mt-1">
+              {customer.phone && (
+                <a href={`tel:${customer.phone}`} className="text-sm text-primary font-medium hover:underline flex items-center gap-1">
+                  <span className="material-symbols-outlined text-sm">call</span>
+                  {customer.phone}
+                </a>
+              )}
+              {customer.email && (
+                <a href={`mailto:${customer.email}`} className="text-sm text-on-surface-variant hover:text-primary flex items-center gap-1">
+                  <span className="material-symbols-outlined text-sm">mail</span>
+                  {customer.email}
+                </a>
+              )}
+            </div>
           </div>
         </div>
+        {session?.role === 'ADMIN' && customer.sales.length === 0 && (
+          <DeleteCustomerButton customerId={customer.id} />
+        )}
       </div>
 
       {/* Stats */}
