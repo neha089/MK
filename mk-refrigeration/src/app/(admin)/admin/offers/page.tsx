@@ -2,13 +2,27 @@ import type { Metadata } from 'next'
 import { prisma } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import Link from 'next/link'
+import { getSession } from '@/lib/session'
+import { logAudit, getClientIp } from '@/lib/audit'
 
 export const metadata: Metadata = { title: 'Offers' }
 export const dynamic = 'force-dynamic'
 
 async function deleteOffer(id: string) {
   'use server'
+  const session = await getSession()
+  const offer = await prisma.offer.findUnique({ where: { id }, select: { title: true } })
   await prisma.offer.delete({ where: { id } })
+  const ip = await getClientIp()
+  await logAudit({
+    action: 'DELETE_OFFER',
+    userId: session?.userId,
+    userEmail: session?.email,
+    entity: 'Offer',
+    entityId: id,
+    meta: offer?.title,
+    ip,
+  })
   revalidatePath('/admin/offers')
 }
 

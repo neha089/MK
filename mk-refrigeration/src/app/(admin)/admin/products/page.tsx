@@ -106,7 +106,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
                 <tr key={p.id} className="hover:bg-surface-container/50 transition-colors">
                   <td className="px-5 py-3.5">
                     <div>
-                      <p className="font-bold text-on-surface line-clamp-1">{p.name}</p>
+                      <Link href={`/admin/products/${p.id}`} className="font-bold text-on-surface hover:text-primary transition-colors line-clamp-1">{p.name}</Link>
                       {p.model && <p className="text-xs text-on-surface-variant">{p.model}</p>}
                     </div>
                   </td>
