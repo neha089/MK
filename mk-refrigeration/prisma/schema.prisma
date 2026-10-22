@@ -1,0 +1,296 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id             String   @id @default(cuid())
+  name           String
+  email          String   @unique
+  password       String
+  role           Role     @default(STAFF)
+  phone          String?
+  sessionVersion Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  purchases  Purchase[]
+  sales      Sale[]
+  quotations Quotation[]
+}
+
+enum Role {
+  ADMIN
+  STAFF
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  icon        String?
+  description String?
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  products    Product[]
+}
+
+model Brand {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
+  logo      String?
+  featured  Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  products  Product[]
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  brand       Brand    @relation(fields: [brandId], references: [id])
+  brandId     String
+  category    Category @relation(fields: [categoryId], references: [id])
+  categoryId  String
+  model       String?
+  capacity    String?
+  starRating  String?
+  description String?
+  specs       Json?
+  price       Decimal  @db.Decimal(10, 2)
+  mrp         Decimal? @db.Decimal(10, 2)
+  discount    Int?
+  images      String[]
+  featured    Boolean  @default(false)
+  inStock     Boolean  @default(true)
+  stockQty    Int      @default(0)
+  barcode     String?  @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  purchaseItems  PurchaseItem[]
+  saleItems      SaleItem[]
+  quotationItems QuotationItem[]
+  inventoryLogs  InventoryLog[]
+
+  @@index([brandId])
+  @@index([categoryId])
+  @@index([inStock])
+}
+
+model Supplier {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  phone     String?
+  email     String?
+  address   String?
+  gstin     String?
+  createdAt DateTime   @default(now())
+  purchases Purchase[]
+}
+
+model Purchase {
+  id           String         @id @default(cuid())
+  invoiceNo    String?
+  supplier     Supplier?      @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  supplierId   String?
+  purchaseDate DateTime       @default(now())
+  totalAmount  Decimal        @db.Decimal(10, 2)
+  notes        String?
+  createdBy    User           @relation(fields: [userId], references: [id], onDelete: Restrict)
+  userId       String
+  items        PurchaseItem[]
+  createdAt    DateTime       @default(now())
+
+  @@index([userId])
+  @@index([supplierId])
+  @@index([purchaseDate])
+}
+
+model PurchaseItem {
+  id         String   @id @default(cuid())
+  purchase   Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  purchaseId String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  productId  String
+  qty        Int
+  costPrice  Decimal  @db.Decimal(10, 2)
+  createdAt  DateTime @default(now())
+
+  @@index([purchaseId])
+  @@index([productId])
+}
+
+model Customer {
+  id         String      @id @default(cuid())
+  name       String
+  phone      String?
+  email      String?
+  address    String?
+  gstin      String?
+  createdAt  DateTime    @default(now())
+  sales      Sale[]
+  quotations Quotation[]
+}
+
+model Sale {
+  id            String      @id @default(cuid())
+  invoiceNo     String      @unique
+  customer      Customer?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customerId    String?
+  customerName  String?
+  customerPhone String?
+  saleDate      DateTime    @default(now())
+  status        SaleStatus  @default(COMPLETED)
+  subtotal      Decimal     @db.Decimal(10, 2)
+  discount      Decimal     @default(0) @db.Decimal(10, 2)
+  gstAmount     Decimal     @default(0) @db.Decimal(10, 2)
+  totalAmount   Decimal     @db.Decimal(10, 2)
+  paymentMode   String      @default("CASH")
+  notes         String?
+  createdBy     User        @relation(fields: [userId], references: [id], onDelete: Restrict)
+  userId        String
+  items         SaleItem[]
+  createdAt     DateTime    @default(now())
+
+  @@index([userId])
+  @@index([customerId])
+  @@index([saleDate])
+}
+
+model SaleItem {
+  id        String  @id @default(cuid())
+  sale      Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  saleId    String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  productId String
+  qty       Int
+  price     Decimal @db.Decimal(10, 2)
+  discount  Decimal @default(0) @db.Decimal(10, 2)
+
+  @@index([saleId])
+  @@index([productId])
+}
+
+model Quotation {
+  id            String          @id @default(cuid())
+  quoteNo       String          @unique
+  customer      Customer?       @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customerId    String?
+  customerName  String?
+  customerPhone String?
+  validDays     Int             @default(7)
+  subtotal      Decimal         @db.Decimal(10, 2)
+  discount      Decimal         @default(0) @db.Decimal(10, 2)
+  totalAmount   Decimal         @db.Decimal(10, 2)
+  notes         String?
+  status        QuotationStatus @default(PENDING)
+  createdBy     User            @relation(fields: [userId], references: [id], onDelete: Restrict)
+  userId        String
+  items         QuotationItem[]
+  createdAt     DateTime        @default(now())
+}
+
+enum QuotationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum SaleStatus {
+  COMPLETED
+  CANCELLED
+  RETURNED
+}
+
+model QuotationItem {
+  id          String    @id @default(cuid())
+  quotation   Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  quotationId String
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Restrict)
+  productId   String
+  qty         Int
+  price       Decimal   @db.Decimal(10, 2)
+  discount    Decimal   @default(0) @db.Decimal(10, 2)
+
+  @@index([quotationId])
+  @@index([productId])
+}
+
+model InventoryLog {
+  id        String        @id @default(cuid())
+  product   Product       @relation(fields: [productId], references: [id], onDelete: Restrict)
+  productId String
+  type      InventoryType
+  qty       Int
+  note      String?
+  refId     String?
+  createdAt DateTime      @default(now())
+
+  @@index([productId])
+  @@index([createdAt])
+}
+
+enum InventoryType {
+  IN
+  OUT
+  ADJUST
+}
+
+model Offer {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  discount    Int?
+  type        String    @default("PERCENT")
+  validFrom   DateTime?
+  validUntil  DateTime?
+  active      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+}
+
+model Enquiry {
+  id        String        @id @default(cuid())
+  name      String
+  phone     String
+  email     String?
+  message   String?
+  product   String?
+  read      Boolean       @default(false)
+  status    EnquiryStatus @default(NEW)
+  createdAt DateTime      @default(now())
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum EnquiryStatus {
+  NEW
+  CONTACTED
+  CONVERTED
+  CLOSED
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  userEmail String?
+  action    String
+  entity    String?
+  entityId  String?
+  meta      String?
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([userId])
+  @@index([action])
+}
