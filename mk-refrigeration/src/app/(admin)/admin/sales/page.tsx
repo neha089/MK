@@ -63,7 +63,15 @@ export default async function SalesPage({ searchParams }: { searchParams: Search
             </thead>
             <tbody className="divide-y divide-outline-variant/20">
               {sales.length === 0 ? (
-                <tr><td colSpan={5} className="text-center py-16 text-on-surface-variant">No sales yet.</td></tr>
+                <tr>
+                  <td colSpan={6} className="py-20">
+                    <div className="flex flex-col items-center justify-center text-center gap-2">
+                      <span className="material-symbols-outlined text-5xl text-on-surface-variant/30">receipt_long</span>
+                      <p className="font-semibold text-on-surface">No sales yet</p>
+                      <p className="text-sm text-on-surface-variant">Record your first bill to get started.</p>
+                    </div>
+                  </td>
+                </tr>
               ) : sales.map((s) => (
                 <tr key={s.id} className="hover:bg-surface-container/50 transition-colors cursor-pointer">
                   <td className="px-5 py-3.5">

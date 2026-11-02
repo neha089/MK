@@ -63,7 +63,15 @@ export default async function PurchasesPage({ searchParams }: { searchParams: Se
             </thead>
             <tbody className="divide-y divide-outline-variant/20">
               {purchases.length === 0 ? (
-                <tr><td colSpan={6} className="text-center py-16 text-on-surface-variant">No purchases yet.</td></tr>
+                <tr>
+                  <td colSpan={6} className="py-20">
+                    <div className="flex flex-col items-center justify-center text-center gap-2">
+                      <span className="material-symbols-outlined text-5xl text-on-surface-variant/30">inventory</span>
+                      <p className="font-semibold text-on-surface">No purchases yet</p>
+                      <p className="text-sm text-on-surface-variant">Add your first stock inload to begin tracking inventory.</p>
+                    </div>
+                  </td>
+                </tr>
               ) : purchases.map((p) => (
                 <tr key={p.id} className="hover:bg-surface-container/50 transition-colors">
                   <td className="px-5 py-3.5">
