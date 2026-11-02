@@ -70,7 +70,15 @@ export default async function QuotationsPage({ searchParams }: { searchParams: S
             </thead>
             <tbody className="divide-y divide-outline-variant/20">
               {quotations.length === 0 ? (
-                <tr><td colSpan={8} className="text-center py-16 text-on-surface-variant">No quotations yet.</td></tr>
+                <tr>
+                  <td colSpan={8} className="py-20">
+                    <div className="flex flex-col items-center justify-center text-center gap-2">
+                      <span className="material-symbols-outlined text-5xl text-on-surface-variant/30">request_quote</span>
+                      <p className="font-semibold text-on-surface">No quotations yet</p>
+                      <p className="text-sm text-on-surface-variant">Create a quotation for a customer to get started.</p>
+                    </div>
+                  </td>
+                </tr>
               ) : quotations.map((q) => (
                 <tr key={q.id} className="hover:bg-surface-container/50 transition-colors">
                   <td className="px-5 py-3.5">

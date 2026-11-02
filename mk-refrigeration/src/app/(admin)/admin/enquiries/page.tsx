@@ -35,8 +35,10 @@ export default async function EnquiriesPage() {
 
       <div className="space-y-3">
         {enquiries.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-outline-variant/40 p-16 text-center text-on-surface-variant">
-            No enquiries yet.
+          <div className="bg-white rounded-2xl border border-outline-variant/40 py-20 flex flex-col items-center text-center gap-2">
+            <span className="material-symbols-outlined text-5xl text-on-surface-variant/30">contact_mail</span>
+            <p className="font-semibold text-on-surface">No enquiries yet</p>
+            <p className="text-sm text-on-surface-variant">Customer enquiries from the website will appear here.</p>
           </div>
         ) : enquiries.map((e) => (
           <div key={e.id} className={`bg-white rounded-2xl border p-5 ${e.status === 'NEW' ? 'border-primary/40 shadow-sm shadow-primary/10' : 'border-outline-variant/40'}`}>
