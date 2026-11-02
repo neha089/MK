@@ -17,7 +17,7 @@ export type AdjustState = { error?: string; fieldErrors?: Record<string, string[
 
 export async function adjustStock(_: AdjustState, formData: FormData): Promise<AdjustState> {
   const session = await getSession()
-  if (!session) return { error: 'Unauthorized' }
+  if (!session || session.role !== 'ADMIN') return { error: 'Only admins can adjust stock' }
 
   const parsed = AdjustSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) return { fieldErrors: parsed.error.flatten().fieldErrors }

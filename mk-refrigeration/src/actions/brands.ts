@@ -53,7 +53,7 @@ export async function updateBrand(id: string, _: BrandFormState, formData: FormD
 
 export async function deleteBrand(id: string) {
   const session = await getSession()
-  if (!session) return
+  if (!session || session.role !== 'ADMIN') return
   await prisma.brand.delete({ where: { id } })
   revalidatePath('/admin/brands')
 }

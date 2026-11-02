@@ -174,6 +174,8 @@ export async function updateQuotation(id: string, _: UpdateQuotationFormState, f
 }
 
 export async function updateQuotationStatus(id: string, status: 'ACCEPTED' | 'REJECTED' | 'EXPIRED') {
+  const session = await getSession()
+  if (!session) return
   await prisma.quotation.update({ where: { id }, data: { status } })
   revalidatePath('/admin/quotations')
 }
@@ -187,6 +189,16 @@ export async function convertQuotationToSale(quotationId: string): Promise<void>
     include: { items: true },
   })
   if (!quotation || quotation.status !== 'PENDING') return
+
+  // Verify stock is available for all items before starting the transaction
+  for (const item of quotation.items) {
+    const product = await prisma.product.findUnique({
+      where: { id: item.productId },
+      select: { stockQty: true, name: true },
+    })
+    if (!product) return
+    if (product.stockQty < item.qty) return
+  }
 
   let saleId: string
   try {

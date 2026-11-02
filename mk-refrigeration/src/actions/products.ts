@@ -125,7 +125,7 @@ export async function updateProduct(id: string, _: ProductFormState, formData: F
 
 export async function deleteProduct(id: string) {
   const session = await getSession()
-  if (!session) return
+  if (!session || session.role !== 'ADMIN') return
 
   const [saleCount, purchaseCount] = await Promise.all([
     prisma.saleItem.count({ where: { productId: id } }),

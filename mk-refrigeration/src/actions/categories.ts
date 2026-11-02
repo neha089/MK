@@ -52,7 +52,7 @@ export async function updateCategory(id: string, _: CatFormState, formData: Form
 
 export async function deleteCategory(id: string) {
   const session = await getSession()
-  if (!session) return
+  if (!session || session.role !== 'ADMIN') return
   await prisma.category.delete({ where: { id } })
   revalidatePath('/admin/categories')
 }
